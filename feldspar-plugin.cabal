@@ -31,7 +31,7 @@ library
 
   build-depends:
     ghc >= 7 && < 7.5,
-    mtl >= 2 && < 2.1,
+    mtl >= 2 && < 2.2,
     base >= 4 && < 4.6,
     process >= 1 && < 1.2,
     directory >= 1.1 && < 1.2,
