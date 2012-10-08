@@ -16,7 +16,7 @@ import Data.Word
 import Data.Complex
 
 import Feldspar.Plugin.Marshal
-import Feldspar.Vector (Vector, DVector, Vector1, Vector2)
+import Feldspar.Vector (Vector, Vector1, Vector2)
 import Feldspar.Matrix (Matrix)
 import Feldspar.Core.Types (Index,Length,WordN(..),IntN(..))
 import Feldspar.Core.Constructs (Data)
@@ -30,7 +30,6 @@ unData (ConT c) | ''Index  == c = [t| WordN |]
                 | ''Length == c = [t| WordN |]
 unData (AppT (ConT c) x) | ''Data    == c = unData x
                          | ''Vector  == c = [t| [$(unData x)]   |]
-                         | ''DVector == c = [t| [$(unData x)]   |]
                          | ''Vector1 == c = [t| [$(unData x)]   |]
                          | ''Vector2 == c = [t| [[$(unData x)]] |]
                          | ''Matrix  == c = [t| [[$(unData x)]] |]
