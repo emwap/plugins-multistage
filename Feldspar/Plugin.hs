@@ -26,7 +26,7 @@ import System.Process (readProcessWithExitCode)
 
 
 -- Feldspar specific
-import Feldspar.Compiler (icompileWithInfos)
+import Feldspar.Compiler.Internal (icompileWithInfos)
 import Feldspar.Compiler.Compiler
 import Feldspar.Compiler.Backend.C.Library (fixFunctionName)
 
@@ -83,7 +83,7 @@ builder fun = let base = nameBase fun
       let cfilename = basename ++ ".c"
       let ofilename = basename ++ ".o"
       let pname     = fixFunctionName base
-      let result    = icompileWithInfos $(varE fun) base defaultOptions
+      let result    = $(varE 'icompileWithInfos) $(varE fun) base defaultOptions
       let header    = sctccrHeader result
       let source    = sctccrSource result
       writeFile hfilename $ sourceCode header
