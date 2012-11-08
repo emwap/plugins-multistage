@@ -10,7 +10,7 @@ where
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax (sequenceQ)
 
-import Foreign.Marshal (unsafeLocalState)
+import Foreign.Marshal.Unsafe (unsafeLocalState)
 
 data Config = Config { declWorker   :: Name -> Name -> [Name] -> Type -> [DecQ]
                      , typeFromName :: Name -> Q Type
