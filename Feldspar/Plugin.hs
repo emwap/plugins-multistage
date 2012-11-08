@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
 
 module Feldspar.Plugin where
 
@@ -46,9 +47,8 @@ loadFun = loadFunWithConfig defaultConfig
 
 
 declareImport :: Name -> TypeQ -> DecQ
-declareImport name typ = forImpD cCall safe "dynamic" name factoryType
-  where
-    factoryType = [t|FunPtr $(typ) -> $(typ)|]
+declareImport name typ =
+    forImpD cCall safe "dynamic" name [t|FunPtr $typ -> $typ|]
 
 declareWorker :: Name -> Name -> [Name] -> Type -> [String] -> [DecQ]
 declareWorker wname name as typ opts =
@@ -69,7 +69,7 @@ worker :: Name -> Name -> [Name] -> Q Type -> Q Body
 worker bname factory as csig = normalB
     [|do
         let ptr               = $(varE bname)
-        let funptr            = castPtrToFunPtr ptr :: FunPtr $(csig)
+        let funptr            = castPtrToFunPtr ptr :: FunPtr $csig
         let fun               = $(varE factory) funptr
         alloca $ \outPtr -> do
           $(appE (appsE ([|fun|] : map toRef as)) [|outPtr|])
