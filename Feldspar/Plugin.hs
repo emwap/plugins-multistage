@@ -9,13 +9,13 @@ import Feldspar.Plugin.Marshal
 
 import Debug.Trace
 
-import BasicTypes (succeeded)
-import ObjLink (lookupSymbol, loadObj, resolveObjs, initObjLinker)
+import System.Plugins
 
 import Foreign.Ptr
 import Foreign.Marshal (alloca)
 import Foreign.Marshal.Unsafe (unsafeLocalState)
 import Foreign.Storable (Storable(peek))
+import Foreign.C.String (CString, withCString)
 
 import Control.Monad ((>=>), when, unless)
 
@@ -98,24 +98,26 @@ builder fun opts = let base = nameBase fun
                                     , sourceCode source
                                     ]
       compileAndLoad cfilename ofilename opts
-      mptr <- lookupSymbol pname
-      case mptr of
-        Just p  -> return p
-        Nothing -> error $ "Symbol " ++ pname ++ " not found"
+      mptr <- withCString ("_" ++ pname) lookupSymbol
+      when (mptr == nullPtr) $ error $ "Symbol " ++ pname ++ " not found"
+      return mptr
   |]
 
 compileAndLoad :: String -> String -> [String] -> IO ()
 compileAndLoad cname oname opts = do
+    initLinker
     exists <- doesFileExist oname
     when exists $ removeFile oname
     compileC cname oname opts
-    loadObj oname
-    res <- resolveObjs
-    unless (succeeded res) $ error $ "Symbols in " ++ oname ++ " could not be resolved"
+    loadRawObject oname
+    resolveObjs $ error $ "Symbols in " ++ oname ++ " could not be resolved"
 
 compileC :: String -> String -> [String] -> IO ()
 compileC srcfile objfile opts = do
   (excode,stdout,stderr) <- readProcessWithExitCode "ghc" (opts ++ [srcfile]) ""
   let output = stdout ++ stderr
   unless (null output) $ putStrLn output
+
+foreign import ccall safe "lookupSymbol"
+   lookupSymbol :: CString -> IO (Ptr a)
 
