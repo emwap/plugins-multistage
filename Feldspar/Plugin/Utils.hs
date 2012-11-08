@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Feldspar.Plugin.Utils where
@@ -15,6 +17,7 @@ import Data.Int
 import Data.Word
 import Data.Complex
 
+import Feldspar.Range (Range(..))
 import Feldspar.Plugin.Marshal
 import Feldspar.Vector (Vector, Vector1, Vector2)
 import Feldspar.Matrix (Matrix)
@@ -137,10 +140,9 @@ mkMem ms = do
     return $ castPtr ptr
   where
     go :: FCIR.Type -> IO (SA ())
-    go (FCIR.ArrayType (FCIR.UndefinedLen) typ)   = go (FCIR.ArrayType (FCIR.LiteralLen maxBound) typ)
-    go (FCIR.ArrayType (FCIR.LiteralLen len) typ) = do
+    go (FCIR.ArrayType Range{..} typ) = do
         let esize = fromIntegral $ sizeFromType typ
-        let len'  = fromIntegral $ min len (1024 * 1024)
-        buf <- mallocBytes $ fromIntegral $ len' * esize
-        return $ SA (castPtr buf) len' esize $ fromIntegral $ len' * esize
+        let len   = fromIntegral $ min upperBound (1024 * 1024)
+        buf <- mallocBytes $ fromIntegral $ len * esize
+        return $ SA (castPtr buf) len esize $ fromIntegral $ len * esize
 
