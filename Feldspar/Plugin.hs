@@ -34,6 +34,12 @@ import Feldspar.Compiler.Backend.C.Library (fixFunctionName)
 defaultConfig = Config { declWorker   = declareWorker
                        , typeFromName = loadFunType >=> unData
                        , prefix       = "c_"
+                       , opts         = [ "-package feldspar-compiler"
+                                        , "-optc -std=c99"
+                                        , "-c"
+                                        , "-optc -Wall"
+                                        , "-w"
+                                        ]
                        }
 
 loadFun = loadFunWithConfig defaultConfig
@@ -44,10 +50,10 @@ declareImport name typ = forImpD cCall safe "dynamic" name factoryType
   where
     factoryType = [t|FunPtr $(typ) -> $(typ)|]
 
-declareWorker :: Name -> Name -> [Name] -> Type -> [DecQ]
-declareWorker wname name as typ =
+declareWorker :: Name -> Name -> [Name] -> Type -> [String] -> [DecQ]
+declareWorker wname name as typ opts =
     [ declareImport factory csig
-    , funD bname [clause [] (builder name) []]
+    , funD bname [clause [] (builder name opts) []]
     , sigD wname hsig
     , funD wname [clause (varsP as) (worker bname factory as csig) []]
     ]
@@ -73,9 +79,9 @@ worker bname factory as csig = normalB
   where
     toRef name = appE (varE 'ref) $ appE (varE 'to) $ varE name
 
-builder :: Name -> Q Body
-builder fun = let base = nameBase fun
-               in normalB
+builder :: Name -> [String] -> Q Body
+builder fun opts = let base = nameBase fun
+                    in normalB
   [|unsafeLocalState $ do
       let wdir = "tmp"
       createDirectoryIfMissing True wdir
@@ -91,25 +97,25 @@ builder fun = let base = nameBase fun
       writeFile cfilename $ unlines [ "#include \"" ++ base ++ ".h\"" -- TODO this should really be done by the compiler
                                     , sourceCode source
                                     ]
-      compileAndLoad cfilename ofilename
+      compileAndLoad cfilename ofilename opts
       mptr <- lookupSymbol pname
       case mptr of
         Just p  -> return p
         Nothing -> error $ "Symbol " ++ pname ++ " not found"
   |]
 
-compileAndLoad :: String -> String -> IO ()
-compileAndLoad cname oname = do
+compileAndLoad :: String -> String -> [String] -> IO ()
+compileAndLoad cname oname opts = do
     exists <- doesFileExist oname
     when exists $ removeFile oname
-    compileC cname oname
+    compileC cname oname opts
     loadObj oname
     res <- resolveObjs
     unless (succeeded res) $ error $ "Symbols in " ++ oname ++ " could not be resolved"
 
-compileC srcfile objfile = do
-  (excode,stdout,stderr) <- readProcessWithExitCode "ghc"
-    ["-package feldspar-compiler", "-optc -std=c99", "-c", "-optc -Wall", "-w", srcfile] ""
+compileC :: String -> String -> [String] -> IO ()
+compileC srcfile objfile opts = do
+  (excode,stdout,stderr) <- readProcessWithExitCode "ghc" (opts ++ [srcfile]) ""
   let output = stdout ++ stderr
   unless (null output) $ putStrLn output
 
