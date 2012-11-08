@@ -7,15 +7,17 @@
 module Feldspar.Plugin.Marshal where
 
 import Foreign.Ptr (Ptr)
-import Foreign.Marshal
+import Foreign.Marshal (new, newArray, peekArray, pokeArray)
+import Foreign.Marshal.Unsafe (unsafeLocalState)
 import Foreign.Storable (Storable(..))
+import Foreign.Storable.Tuple ()
 import Data.Int
 import Data.Word
 import Data.Complex
 import Control.Applicative
 import qualified Foreign.Storable.Record as Store
 
-import Feldspar.Core.Types (IntN, WordN)
+import Feldspar.Core.Types (IntN(..), WordN(..))
 
 
 data SA a = SA { buf         :: Ptr a
@@ -40,6 +42,23 @@ instance Storable a => Storable (SA a)
     alignment = Store.alignment storeSA
     peek      = Store.peek      storeSA
     poke      = Store.poke      storeSA
+
+deriving instance Storable IntN
+deriving instance Storable WordN
+
+storeComplex :: (RealFloat a, Storable a)
+             => Store.Dictionary (Complex a)
+storeComplex = Store.run $ (:+)
+    <$> Store.element realPart
+    <*> Store.element imagPart
+
+instance (RealFloat a, Storable a) => Storable (Complex a)
+  where
+    sizeOf    = Store.sizeOf    storeComplex
+    alignment = Store.alignment storeComplex
+    peek      = Store.peek      storeComplex
+    poke      = Store.poke      storeComplex
+
 
 
 class Reference a

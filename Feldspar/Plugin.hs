@@ -13,7 +13,8 @@ import BasicTypes (succeeded)
 import ObjLink (lookupSymbol, loadObj, resolveObjs, initObjLinker)
 
 import Foreign.Ptr
-import Foreign.Marshal ( Pool, withPool, unsafeLocalState)
+import Foreign.Marshal (alloca)
+import Foreign.Marshal.Unsafe (unsafeLocalState)
 import Foreign.Storable (Storable(peek))
 
 import Control.Monad ((>=>), when, unless)
@@ -64,10 +65,10 @@ worker bname factory as csig = normalB
         let ptr               = $(varE bname)
         let funptr            = castPtrToFunPtr ptr :: FunPtr $(csig)
         let fun               = $(varE factory) funptr
-        outPtr  <- allocate
-        $(appE (appsE ([|fun|] : map toRef as)) [|outPtr|])
-        res <- peek outPtr
-        from res
+        alloca $ \outPtr -> do
+          $(appE (appsE ([|fun|] : map toRef as)) [|outPtr|])
+          res <- peek outPtr
+          from res
     |]
   where
     toRef name = appE (varE 'ref) $ appE (varE 'to) $ varE name
