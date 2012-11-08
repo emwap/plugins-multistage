@@ -288,14 +288,8 @@ instance (Storable (Rep a), Marshal a) => Marshal [a]
 instance (Marshal a, Marshal b) => Marshal (a,b)
   where
     type Rep (a,b) = (Rep a,Rep b)
-    to (a,b) = unsafeLocalState $ do
-      let a' = to a
-      let b' = to b
-      return (a',b')
-    from (a,b) = do
-      a' <- from a
-      b' <- from b
-      return (a',b')
+    to (a,b) = (to a, to b)
+    from (a,b) = (,) <$> from a <*> from b
 
 instance ( Marshal a
          , Marshal b
@@ -303,16 +297,8 @@ instance ( Marshal a
          ) => Marshal (a,b,c)
   where
     type Rep (a,b,c) = (Rep a,Rep b,Rep c)
-    to (a,b,c) = unsafeLocalState $ do
-      let a' = to a
-      let b' = to b
-      let c' = to c
-      return (a',b',c')
-    from (a,b,c) = do
-      a' <- from a
-      b' <- from b
-      c' <- from c
-      return (a',b',c')
+    to (a,b,c) = (to a, to b, to c)
+    from (a,b,c) = (,,) <$> from a <*> from b <*> from c
 
 instance ( Marshal a
          , Marshal b
@@ -321,18 +307,9 @@ instance ( Marshal a
          ) => Marshal (a,b,c,d)
   where
     type Rep (a,b,c,d) = (Rep a,Rep b,Rep c,Rep d)
-    to (a,b,c,d) = unsafeLocalState $ do
-      let a' = to a
-      let b' = to b
-      let c' = to c
-      let d' = to d
-      return (a',b',c',d')
-    from (a,b,c,d) = do
-      a' <- from a
-      b' <- from b
-      c' <- from c
-      d' <- from d
-      return (a',b',c',d')
+    to (a,b,c,d) = (to a, to b, to c, to d)
+    from (a,b,c,d) =
+      (,,,) <$> from a <*> from b <*> from c <*> from d
 
 instance ( Marshal a
          , Marshal b
@@ -342,20 +319,9 @@ instance ( Marshal a
          ) => Marshal (a,b,c,d,e)
   where
     type Rep (a,b,c,d,e) = (Rep a,Rep b,Rep c,Rep d,Rep e)
-    to (a,b,c,d,e) = unsafeLocalState $ do
-      let a' = to a
-      let b' = to b
-      let c' = to c
-      let d' = to d
-      let e' = to e
-      return (a',b',c',d',e')
-    from (a,b,c,d,e) = do
-      a' <- from a
-      b' <- from b
-      c' <- from c
-      d' <- from d
-      e' <- from e
-      return (a',b',c',d',e')
+    to (a,b,c,d,e) = (to a, to b, to c, to d, to e)
+    from (a,b,c,d,e) =
+      (,,,,) <$> from a <*> from b <*> from c <*> from d <*> from e
 
 instance ( Marshal a
          , Marshal b
@@ -366,22 +332,9 @@ instance ( Marshal a
          ) => Marshal (a,b,c,d,e,f)
   where
     type Rep (a,b,c,d,e,f) = (Rep a,Rep b,Rep c,Rep d,Rep e,Rep f)
-    to (a,b,c,d,e,f) = unsafeLocalState $ do
-      let a' = to a
-      let b' = to b
-      let c' = to c
-      let d' = to d
-      let e' = to e
-      let f' = to f
-      return (a',b',c',d',e',f')
-    from (a,b,c,d,e,f) = do
-      a' <- from a
-      b' <- from b
-      c' <- from c
-      d' <- from d
-      e' <- from e
-      f' <- from f
-      return (a',b',c',d',e',f')
+    to (a,b,c,d,e,f) = (to a, to b, to c, to d, to e, to f)
+    from (a,b,c,d,e,f) =
+      (,,,,,) <$> from a <*> from b <*> from c <*> from d <*> from e <*> from f
 
 instance ( Marshal a
          , Marshal b
@@ -393,22 +346,7 @@ instance ( Marshal a
          ) => Marshal (a,b,c,d,e,f,g)
   where
     type Rep (a,b,c,d,e,f,g) = (Rep a,Rep b,Rep c,Rep d,Rep e,Rep f,Rep g)
-    to (a,b,c,d,e,f,g) = unsafeLocalState $ do
-      let a' = to a
-      let b' = to b
-      let c' = to c
-      let d' = to d
-      let e' = to e
-      let f' = to f
-      let g' = to g
-      return (a',b',c',d',e',f',g')
-    from (a,b,c,d,e,f,g) = do
-      a' <- from a
-      b' <- from b
-      c' <- from c
-      d' <- from d
-      e' <- from e
-      f' <- from f
-      g' <- from g
-      return (a',b',c',d',e',f',g')
+    to (a,b,c,d,e,f,g) = (to a, to b, to c, to d, to e, to f, to g)
+    from (a,b,c,d,e,f,g) =
+      (,,,,,,) <$> from a <*> from b <*> from c <*> from d <*> from e <*> from f <*> from g
 
