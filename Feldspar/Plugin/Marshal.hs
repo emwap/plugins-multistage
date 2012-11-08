@@ -1,4 +1,8 @@
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Feldspar.Plugin.Marshal where
 
@@ -14,27 +18,28 @@ import qualified Foreign.Storable.Record as Store
 import Feldspar.Core.Types (IntN, WordN)
 
 
-data SA a = SA { buf   :: Ptr a
-               , elems :: Int32
-               , esize :: Int32
-               , bytes :: Word32
+data SA a = SA { buf         :: Ptr a
+               , elems       :: Int32
+               , esize       :: Int32
+               , bytes       :: Word32
+               , initialized :: Word32
                }
   deriving (Eq, Show)
 
 storeSA :: Storable a => Store.Dictionary (SA a)
-storeSA =
-    Store.run $ SA
-      <$> (Store.element buf)
-      <*> (Store.element elems)
-      <*> (Store.element esize)
-      <*> (Store.element bytes)
+storeSA = Store.run $ SA
+    <$> Store.element buf
+    <*> Store.element elems
+    <*> Store.element esize
+    <*> Store.element bytes
+    <*> Store.element initialized
 
 instance Storable a => Storable (SA a)
   where
-    sizeOf = Store.sizeOf storeSA
+    sizeOf    = Store.sizeOf    storeSA
     alignment = Store.alignment storeSA
-    peek = Store.peek storeSA
-    poke = Store.poke storeSA
+    peek      = Store.peek      storeSA
+    poke      = Store.poke      storeSA
 
 
 class Reference a
@@ -164,7 +169,6 @@ instance Storable (a, b, c, d, e, f, g) => Reference (a,b,c,d,e,f,g)
     deref = peek
 
 
-
 class Marshal a
   where
     type Rep a :: *
@@ -257,12 +261,10 @@ instance (Storable (Rep a), Marshal a) => Marshal [a]
         let esize = fromIntegral $ sizeOf (undefined :: Rep a)
         let ys    = map to xs
         buf <- newArray ys
-        let sa = SA buf len esize $ fromIntegral (len * esize)
+        let sa = SA buf len esize (fromIntegral (len * esize)) 0x89abcdef
         return sa
-    from sa@(SA buf len esize bytes) = do
-        ys <- peekArray (fromIntegral len) buf
-        xs <- mapM from ys
-        return xs
+    from sa@(SA buf len esize bytes _) =
+        mapM from =<< peekArray (fromIntegral len) buf
 
 instance (Marshal a, Marshal b) => Marshal (a,b)
   where
