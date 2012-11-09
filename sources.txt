@@ -1,0 +1,3 @@
+./
+git://github.com/feldspar/feldspar-language
+git://github.com/feldspar/feldspar-compiler

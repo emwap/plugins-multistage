@@ -1,3 +1,8 @@
 language: haskell
+
 before_install:
-    - "cabal install hunit test-framework-hunit test-framework-quickcheck2 test-framework-th"
+    - "cabal install cabal-meta"
+
+install:
+    - "cabal-meta install --enable-tests"
+
