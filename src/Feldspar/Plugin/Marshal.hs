@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -64,86 +65,28 @@ instance (RealFloat a, Storable a) => Storable (Complex a)
 class Reference a
   where
     type Ref a :: *
-    ref   :: a     -> Ref a
+
+    ref         ::                a -> Ref a
+    default ref :: (a ~ Ref a) => a -> Ref a
+    ref = id
+
     deref :: Ref a -> IO a
-
-instance Reference Bool
-  where
-    type Ref Bool = Bool
-    ref   = id
+    default deref :: (a ~ Ref a) => Ref a -> IO a
     deref = return
 
-instance Reference Int8
-  where
-    type Ref Int8 = Int8
-    ref   = id
-    deref = return
-
-instance Reference Int16
-  where
-    type Ref Int16 = Int16
-    ref   = id
-    deref = return
-
-instance Reference Int32
-  where
-    type Ref Int32 = Int32
-    ref   = id
-    deref = return
-
-instance Reference Int64
-  where
-    type Ref Int64 = Int64
-    ref   = id
-    deref = return
-
-instance Reference IntN
-  where
-    type Ref IntN = IntN
-    ref   = id
-    deref = return
-
-instance Reference Word8
-  where
-    type Ref Word8 = Word8
-    ref   = id
-    deref = return
-
-instance Reference Word16
-  where
-    type Ref Word16 = Word16
-    ref   = id
-    deref = return
-
-instance Reference Word32
-  where
-    type Ref Word32 = Word32
-    ref   = id
-    deref = return
-
-instance Reference Word64
-  where
-    type Ref Word64 = Word64
-    ref   = id
-    deref = return
-
-instance Reference WordN
-  where
-    type Ref WordN = WordN
-    ref   = id
-    deref = return
-
-instance Reference Float
-  where
-    type Ref Float = Float
-    ref   = id
-    deref = return
-
-instance Storable a => Reference (Complex a)
-  where
-    type Ref (Complex a) = Complex a
-    ref   = id
-    deref = return
+instance Reference Bool        where type Ref Bool        = Bool
+instance Reference Int8        where type Ref Int8        = Int8
+instance Reference Int16       where type Ref Int16       = Int16
+instance Reference Int32       where type Ref Int32       = Int32
+instance Reference Int64       where type Ref Int64       = Int64
+instance Reference IntN        where type Ref IntN        = IntN
+instance Reference Word8       where type Ref Word8       = Word8
+instance Reference Word16      where type Ref Word16      = Word16
+instance Reference Word32      where type Ref Word32      = Word32
+instance Reference Word64      where type Ref Word64      = Word64
+instance Reference WordN       where type Ref WordN       = WordN
+instance Reference Float       where type Ref Float       = Float
+instance Reference (Complex a) where type Ref (Complex a) = Complex a
 
 instance (Storable a) => Reference (SA a)
   where
@@ -191,86 +134,28 @@ instance Storable (a, b, c, d, e, f, g) => Reference (a,b,c,d,e,f,g)
 class Marshal a
   where
     type Rep a :: *
-    to   :: a     -> Rep a
+
+    to         ::                a -> Rep a
+    default to :: (a ~ Rep a) => a -> Rep a
+    to = id
+
     from :: Rep a -> IO a
-
-instance Marshal Bool
-  where
-    type Rep Bool = Bool
-    to   = id
+    default from :: (a ~ Rep a) => Rep a -> IO a
     from = return
 
-instance Marshal Int8
-  where
-    type Rep Int8 = Int8
-    to   = id
-    from = return
-
-instance Marshal Int16
-  where
-    type Rep Int16 = Int16
-    to   = id
-    from = return
-
-instance Marshal Int32
-  where
-    type Rep Int32 = Int32
-    to   = id
-    from = return
-
-instance Marshal Int64
-  where
-    type Rep Int64 = Int64
-    to   = id
-    from = return
-
-instance Marshal IntN
-  where
-    type Rep IntN = IntN
-    to   = id
-    from = return
-
-instance Marshal Word8
-  where
-    type Rep Word8 = Word8
-    to   = id
-    from = return
-
-instance Marshal Word16
-  where
-    type Rep Word16 = Word16
-    to   = id
-    from = return
-
-instance Marshal Word32
-  where
-    type Rep Word32 = Word32
-    to   = id
-    from = return
-
-instance Marshal Word64
-  where
-    type Rep Word64 = Word64
-    to   = id
-    from = return
-
-instance Marshal WordN
-  where
-    type Rep WordN = WordN
-    to   = id
-    from = return
-
-instance Marshal Float
-  where
-    type Rep Float = Float
-    to   = id
-    from = return
-
-instance Marshal a => Marshal (Complex a)
-  where
-    type Rep (Complex a) = Complex a
-    to   = id
-    from = return
+instance Marshal Bool        where type Rep Bool        = Bool
+instance Marshal Int8        where type Rep Int8        = Int8
+instance Marshal Int16       where type Rep Int16       = Int16
+instance Marshal Int32       where type Rep Int32       = Int32
+instance Marshal Int64       where type Rep Int64       = Int64
+instance Marshal IntN        where type Rep IntN        = IntN
+instance Marshal Word8       where type Rep Word8       = Word8
+instance Marshal Word16      where type Rep Word16      = Word16
+instance Marshal Word32      where type Rep Word32      = Word32
+instance Marshal Word64      where type Rep Word64      = Word64
+instance Marshal WordN       where type Rep WordN       = WordN
+instance Marshal Float       where type Rep Float       = Float
+instance Marshal (Complex a) where type Rep (Complex a) = Complex a
 
 instance (Storable (Rep a), Marshal a) => Marshal [a]
   where
