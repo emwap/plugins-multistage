@@ -1,9 +1,8 @@
 name:           feldspar-plugin
 version:        0.1
 synopsis:       Dynamicaly load a compiled Feldspar program as a Haskell function
-description:    Feldspar (Functional Embedded Language for DSP and PARallelism)
-                is an embedded DSL for describing digital signal processing
-                algorithms.
+description:    Feldspar (http://feldspar.github.com) is an embedded DSL
+                for describing digital signal processing algorithms.
 
                 This package contains a framework that enables loading compiled Feldspar
                 programs back into GHC
@@ -16,7 +15,7 @@ license-file:   LICENSE
 stability:      experimental
 build-type:     Simple
 cabal-version:  >= 1.14
-tested-with:    GHC==7.4
+tested-with:    GHC==7.6
 
 source-repository head
     type: git
