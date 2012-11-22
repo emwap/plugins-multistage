@@ -33,7 +33,7 @@ import Feldspar.Compiler.Compiler
 import Feldspar.Compiler.Backend.C.Library (fixFunctionName)
 
 defaultConfig = Config { declWorker   = declareWorker
-                       , typeFromName = loadFunType >=> unData
+                       , typeFromName = loadFunType >=> rewriteType
                        , prefix       = "c_"
                        , opts         = [ "-package feldspar-compiler"
                                         , "-optc -std=c99"
