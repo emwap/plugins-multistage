@@ -74,23 +74,22 @@ worker bname factory as csig = normalB
         let fun               = $(varE factory) funptr
         alloca $ \outPtr -> do
           $(appE (appsE ([|fun|] : map toRef as)) [|outPtr|])
-          res <- peek outPtr
-          from res
+          from =<< peek outPtr
     |]
   where
-    toRef name = appE (varE 'ref) $ appE (varE 'to) $ varE name
+    toRef name = [| ref $ to $(varE name) |]
 
 builder :: Name -> [String] -> Q Body
-builder fun opts = let base = nameBase fun
+builder fun opts = let wdir = "tmp"
+                       base = nameBase fun
+                       basename  = wdir ++ "/" ++ base
+                       hfilename = basename ++ ".h"
+                       cfilename = basename ++ ".c"
+                       ofilename = basename ++ ".o"
+                       pname     = fixFunctionName base
                     in normalB
   [|unsafeLocalState $ do
-      let wdir = "tmp"
       createDirectoryIfMissing True wdir
-      let basename  = wdir ++ "/" ++ base
-      let hfilename = basename ++ ".h"
-      let cfilename = basename ++ ".c"
-      let ofilename = basename ++ ".o"
-      let pname     = fixFunctionName base
       let result    = $(varE 'icompileWithInfos) $(varE fun) base defaultOptions
       let header    = sctccrHeader result
       let source    = sctccrSource result
