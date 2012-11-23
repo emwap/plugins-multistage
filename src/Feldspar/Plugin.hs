@@ -60,8 +60,8 @@ declareWorker Config{..} wname name as typ =
     ]
   where
     base    = nameBase name
-    bname   = mkName $ "c_" ++ base ++ "_builder"
-    factory = mkName $ "c_" ++ base ++ "_factory"
+    bname   = mkName $ prefix ++ base ++ "_builder"
+    factory = mkName $ prefix ++ base ++ "_factory"
     varsP   = map varP
     hsig    = buildHaskellType typ
     csig    = buildCType typ
