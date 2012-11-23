@@ -91,11 +91,9 @@ builder Config{..} fun = let base      = nameBase fun
   [|unsafeLocalState $ do
       createDirectoryIfMissing True wdir
       let result    = $(varE 'icompileWithInfos) $(varE fun) base defaultOptions
-      let header    = sctccrHeader result
-      let source    = sctccrSource result
-      writeFile hfilename $ sourceCode header
+      writeFile hfilename $ sourceCode $ sctccrHeader result
       writeFile cfilename $ unlines [ "#include \"" ++ base ++ ".h\"" -- TODO this should really be done by the compiler
-                                    , sourceCode source
+                                    , sourceCode $ sctccrSource result
                                     ]
       compileAndLoad cfilename ofilename opts
       mptr <- withCString ("_" ++ pname) lookupSymbol
