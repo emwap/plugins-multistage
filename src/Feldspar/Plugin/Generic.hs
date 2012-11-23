@@ -17,6 +17,7 @@ import Foreign.Marshal.Unsafe (unsafeLocalState)
 data Config = Config { declWorker   :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
                      , typeFromName :: Name -> Q Type
                      , prefix       :: String
+                     , wdir         :: String
                      , opts         :: [String]
                      }
 

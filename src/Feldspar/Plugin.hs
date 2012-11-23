@@ -36,6 +36,7 @@ import Feldspar.Compiler.Backend.C.Library (fixFunctionName)
 defaultConfig = Config { declWorker   = declareWorker
                        , typeFromName = loadFunType >=> rewriteType
                        , prefix       = "c_"
+                       , wdir         = "tmp"
                        , opts         = [ "-package feldspar-compiler"
                                         , "-optc -std=c99"
                                         , "-c"
@@ -52,9 +53,9 @@ declareImport name typ =
     forImpD cCall safe "dynamic" name [t|FunPtr $typ -> $typ|]
 
 declareWorker :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
-declareWorker Config{..} wname name as typ =
+declareWorker conf@Config{..} wname name as typ =
     [ declareImport factory csig
-    , funD bname [clause [] (builder name opts) []]
+    , funD bname [clause [] (builder conf name) []]
     , sigD wname hsig
     , funD wname [clause (varsP as) (worker bname factory as csig) []]
     ]
@@ -79,15 +80,14 @@ worker bname factory as csig = normalB
   where
     toRef name = [| ref $ to $(varE name) |]
 
-builder :: Name -> [String] -> Q Body
-builder fun opts = let wdir = "tmp"
-                       base = nameBase fun
-                       basename  = wdir ++ "/" ++ base
-                       hfilename = basename ++ ".h"
-                       cfilename = basename ++ ".c"
-                       ofilename = basename ++ ".o"
-                       pname     = fixFunctionName base
-                    in normalB
+builder :: Config -> Name -> Q Body
+builder Config{..} fun = let base      = nameBase fun
+                             basename  = wdir ++ "/" ++ base
+                             hfilename = basename ++ ".h"
+                             cfilename = basename ++ ".c"
+                             ofilename = basename ++ ".o"
+                             pname     = fixFunctionName base
+                          in normalB
   [|unsafeLocalState $ do
       createDirectoryIfMissing True wdir
       let result    = $(varE 'icompileWithInfos) $(varE fun) base defaultOptions
