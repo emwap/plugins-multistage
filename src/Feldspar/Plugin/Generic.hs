@@ -14,20 +14,20 @@ import Language.Haskell.TH.Syntax (sequenceQ)
 
 import Foreign.Marshal.Unsafe (unsafeLocalState)
 
-data Config = Config { declWorker   :: Name -> Name -> [Name] -> Type -> [String] -> [DecQ]
+data Config = Config { declWorker   :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
                      , typeFromName :: Name -> Q Type
                      , prefix       :: String
                      , opts         :: [String]
                      }
 
 loadFunWithConfig :: Config -> Name -> Q [Dec]
-loadFunWithConfig Config{..} name = do
+loadFunWithConfig conf@Config{..} name = do
     typ <- typeFromName name
     let base    = nameBase name
     let cname   = mkName $ prefix ++ base
     let wname   = mkName $ prefix ++ base ++ "_worker"
     let args    = [mkName $ 'v' : show i | i <- [1..(arity typ)]]
-    sequenceQ $  declWorker wname name args typ opts
+    sequenceQ $  declWorker conf wname name args typ
               ++ declareWrapper cname wname args typ
   where
     arity :: Type -> Int

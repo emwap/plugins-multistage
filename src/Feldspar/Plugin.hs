@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 
@@ -50,8 +51,8 @@ declareImport :: Name -> TypeQ -> DecQ
 declareImport name typ =
     forImpD cCall safe "dynamic" name [t|FunPtr $typ -> $typ|]
 
-declareWorker :: Name -> Name -> [Name] -> Type -> [String] -> [DecQ]
-declareWorker wname name as typ opts =
+declareWorker :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
+declareWorker Config{..} wname name as typ =
     [ declareImport factory csig
     , funD bname [clause [] (builder name opts) []]
     , sigD wname hsig
