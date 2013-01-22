@@ -31,7 +31,6 @@ library
     Feldspar.Plugin.Utils
 
   build-depends:
-    ghc >= 7.4 && < 7.7,
     base >= 4 && < 4.7,
     plugins >= 1.5.3 && < 2,
     process >= 1 && < 1.2,
@@ -41,8 +40,8 @@ library
     storable-record < 0.1,
     storable-tuple < 0.1,
     syntactic >= 1.5,
-    feldspar-language >= 0.6,
-    feldspar-compiler >= 0.6
+    feldspar-language >= 0.6.1,
+    feldspar-compiler >= 0.6.1
 
   hs-source-dirs: src
 

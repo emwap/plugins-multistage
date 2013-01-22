@@ -29,9 +29,8 @@ import System.Process (readProcessWithExitCode)
 
 
 -- Feldspar specific
-import Feldspar.Compiler.Internal (icompileWithInfos)
-import Feldspar.Compiler.Compiler
-import Feldspar.Compiler.Backend.C.Library (fixFunctionName)
+import Feldspar.Compiler
+import Feldspar.Compiler.Backend.C.Library (encodeFunctionName)
 
 defaultConfig = Config { declWorker   = declareWorker
                        , typeFromName = loadFunType >=> rewriteType
@@ -83,18 +82,13 @@ worker bname factory as csig = normalB
 builder :: Config -> Name -> Q Body
 builder Config{..} fun = let base      = nameBase fun
                              basename  = wdir ++ "/" ++ base
-                             hfilename = basename ++ ".h"
                              cfilename = basename ++ ".c"
                              ofilename = basename ++ ".o"
-                             pname     = fixFunctionName base
+                             pname     = encodeFunctionName base
                           in normalB
   [|unsafeLocalState $ do
       createDirectoryIfMissing True wdir
-      let result    = $(varE 'icompileWithInfos) $(varE fun) base defaultOptions
-      writeFile hfilename $ sourceCode $ sctccrHeader result
-      writeFile cfilename $ unlines [ "#include \"" ++ base ++ ".h\"" -- TODO this should really be done by the compiler
-                                    , sourceCode $ sctccrSource result
-                                    ]
+      $(varE 'compile) $(varE fun) basename base defaultOptions
       compileAndLoad cfilename ofilename opts
       mptr <- withCString ("_" ++ pname) lookupSymbol
       when (mptr == nullPtr) $ error $ "Symbol " ++ pname ++ " not found"
