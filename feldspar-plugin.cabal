@@ -47,3 +47,28 @@ library
 
   ghc-options: -fcontext-stack=100
 
+test-suite regression
+  type: exitcode-stdio-1.0
+
+  hs-source-dirs: tests
+
+  main-is: RegressionTests.hs
+
+  default-language: Haskell2010
+
+  build-depends:
+    feldspar-language >= 0.6.1 && < 0.7,
+    feldspar-compiler >= 0.6.1 && < 0.7,
+    feldspar-plugin,
+    base                  >= 4      && < 4.7,
+--    text                  >= 0.11.2 && < 0.12,
+--    bytestring            >= 0.9    && < 0.11,
+    test-framework        >= 0.6    && < 0.9,
+    test-framework-th,
+    test-framework-hunit  >= 0.3    && < 0.4,
+    test-framework-quickcheck2 >= 0.3 && < 0.4,
+--    system-filepath       >= 0.4.7  && < 0.5,
+--    shelly                >= 0.14.1 && < 0.15,
+    QuickCheck            >= 2.5 && < 3,
+    HUnit                 >= 1.2.5  && < 1.3
+
