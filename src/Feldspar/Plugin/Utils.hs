@@ -45,6 +45,6 @@ buildHaskellType = go
 buildCType :: Type -> Q Type
 buildCType = go
   where
-    go (AppT (AppT ArrowT t) r) = [t| Ref (Rep $(return t)) -> $(go r) |]
-    go r                        = [t| Ptr (Rep $(return r)) -> IO ()   |]
+    go (AppT (AppT ArrowT t) r) = [t|      Ref (Rep $(return t))  -> $(go r) |]
+    go r                        = [t| Ptr (Ref (Rep $(return r))) -> IO ()   |]
 

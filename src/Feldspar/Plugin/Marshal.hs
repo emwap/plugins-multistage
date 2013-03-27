@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -8,7 +9,7 @@
 module Feldspar.Plugin.Marshal where
 
 import Foreign.Ptr (Ptr)
-import Foreign.Marshal (new, newArray, peekArray, pokeArray)
+import Foreign.Marshal (new, newArray, peekArray)
 import Foreign.Marshal.Unsafe (unsafeLocalState)
 import Foreign.Storable (Storable(..))
 import Foreign.Storable.Tuple ()
@@ -20,12 +21,12 @@ import qualified Foreign.Storable.Record as Store
 
 import Feldspar.Core.Types (IntN(..), WordN(..))
 
+import Debug.Trace
 
 data SA a = SA { buf         :: Ptr a
                , elems       :: Int32
                , esize       :: Int32
                , bytes       :: Word32
-               , initialized :: Word32
                }
   deriving (Eq, Show)
 
@@ -35,7 +36,6 @@ storeSA = Store.run $ SA
     <*> Store.element elems
     <*> Store.element esize
     <*> Store.element bytes
-    <*> Store.element initialized
 
 instance Storable a => Storable (SA a)
   where
@@ -161,14 +161,13 @@ instance (Storable (Rep a), Marshal a) => Marshal [a]
   where
     type Rep [a] = SA (Rep a)
     to xs = unsafeLocalState $ do
-        let len   = fromIntegral $ length xs
-        let esize = fromIntegral $ sizeOf (undefined :: Rep a)
-        let ys    = map to xs
-        buf <- newArray ys
-        let sa = SA buf len esize (fromIntegral (len * esize)) 0x89abcdef
-        return sa
-    from sa@(SA buf len esize bytes _) =
-        mapM from =<< peekArray (fromIntegral len) buf
+        let len  = fromIntegral $ length xs
+        let size = fromIntegral $ sizeOf (undefined :: Rep a)
+        let ys   = map to xs
+        buffer <- newArray ys
+        return $ SA buffer len size (fromIntegral (len * size))
+    from SA{..} = do
+        mapM from =<< peekArray (fromIntegral elems) buf
 
 instance (Marshal a, Marshal b) => Marshal (a,b)
   where
