@@ -25,6 +25,7 @@ import Language.Haskell.TH
 
 import System.Directory (doesFileExist, removeFile, createDirectoryIfMissing)
 import System.Process (readProcessWithExitCode)
+import System.Info (os)
 
 
 -- Feldspar specific
@@ -96,7 +97,10 @@ builder Config{..} fun = normalB
   where
     base     = nameBase fun
     basename = wdir ++ "/" ++ base
-    symbol   = "_" ++ encodeFunctionName base
+    symbol   = ldprefix ++ encodeFunctionName base
+    ldprefix = case os of
+                 "darwin" -> "_"
+                 _        -> ""
 
 compileAndLoad :: String -> [String] -> IO ()
 compileAndLoad name opts = do
