@@ -47,6 +47,9 @@ library
 
   c-sources: src/runtime.c
 
+  if os(linux)
+    extra-libraries: gcc_s
+
   ghc-options: -fcontext-stack=100
 
 test-suite regression

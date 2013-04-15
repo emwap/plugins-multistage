@@ -37,7 +37,7 @@ defaultConfig = Config { declWorker   = declareWorker
                        , typeFromName = loadFunType >=> rewriteType
                        , prefix       = "c_"
                        , wdir         = "tmp"
-                       , opts         = [ "-package feldspar-plugin"
+                       , opts         = [ "-package feldspar-compiler"
                                         , "-optc -std=c99"
                                         , "-c"
                                         , "-optc -Wall"
