@@ -45,6 +45,8 @@ library
 
   hs-source-dirs: src
 
+  c-sources: src/runtime.c
+
   ghc-options: -fcontext-stack=100
 
 test-suite regression
