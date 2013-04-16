@@ -1,5 +1,5 @@
 name:           feldspar-plugin
-version:        0.1
+version:        0.2
 synopsis:       Dynamicaly load a compiled Feldspar program as a Haskell function
 description:    Feldspar (http://feldspar.github.com) is an embedded DSL
                 for describing digital signal processing algorithms.
