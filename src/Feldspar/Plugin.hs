@@ -52,6 +52,7 @@ declareImport name csig =
 declareWorker :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
 declareWorker conf@Config{..} wname name as typ =
     [ declareImport factory csig
+    , sigD bname [t| Ptr $(csig) |]
     , funD bname [clause [] (builder conf name) []]
     , sigD wname hsig
     , funD wname [clause (map varP as) (worker bname factory as csig) []]
@@ -66,8 +67,7 @@ declareWorker conf@Config{..} wname name as typ =
 worker :: Name -> Name -> [Name] -> Q Type -> Q Body
 worker bname factory as csig = normalB
     [|do
-        let funptr = castPtrToFunPtr $(varE bname) :: FunPtr $(csig)
-        let fun    = $(varE factory) funptr
+        let fun = $(varE factory) $ castPtrToFunPtr $(varE bname)
         calloca $ \outPtr -> do
           $(appE (appsE ([|fun|] : map toRef as)) [|outPtr|])
           from =<< deref =<< peek outPtr
