@@ -37,12 +37,7 @@ defaultConfig = Config { declWorker   = declareWorker
                        , typeFromName = loadFunType >=> rewriteType
                        , prefix       = "c_"
                        , wdir         = "tmp"
-                       , opts         = [ "-package feldspar-compiler"
-                                        , "-optc -std=c99"
-                                        , "-c"
-                                        , "-optc -Wall"
-                                        , "-w"
---                                        , "-optc -DLOG"
+                       , opts         = [ -- "-optc -DLOG"
                                         ]
                        }
 
@@ -115,7 +110,13 @@ compileAndLoad name opts = do
 
 compileC :: String -> String -> [String] -> IO ()
 compileC srcfile objfile opts = do
-    (_,stdout,stderr) <- readProcessWithExitCode "ghc" (opts ++ ["-o",objfile,srcfile]) ""
+    let args = [ "-package feldspar-compiler"
+               , "-optc -std=c99"
+               , "-optc -Wall"
+               , "-w"
+               , "-c"
+               ]
+    (_,stdout,stderr) <- readProcessWithExitCode "ghc" (args ++ opts ++ ["-o",objfile,srcfile]) ""
     let output = stdout ++ stderr
     unless (null output) $ putStrLn output
 
