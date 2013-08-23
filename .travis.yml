@@ -10,6 +10,7 @@ before_install:
     # Try installing some of the build-deps with apt-get for speed
     # - ./tools/travis-cabal-apt-install $mode feldspar-language/ feldspar-compiler/ ./
     - cabal install --constraint="stm > 2.3" $mode tasty feldspar-language/ feldspar-compiler/
+    - cabal install --only-dependencies $mode ./
 
 install:
     - cabal configure $mode
