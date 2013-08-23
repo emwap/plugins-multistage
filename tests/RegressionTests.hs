@@ -2,11 +2,9 @@
 
 module Main where
 
-import Test.Framework
-import Test.Framework.TH
-import Test.Framework.Providers.HUnit
-import Test.Framework.Providers.QuickCheck2
-import Test.HUnit
+import Test.Tasty
+import Test.Tasty.TH
+import Test.Tasty.QuickCheck
 import Test.QuickCheck
 import Test.QuickCheck.Modifiers
 
@@ -38,4 +36,4 @@ prop_prog2 (NonEmpty xs) = eval prog2 xs === c_prog2 xs
 
 tests = $(testGroupGenerator)
 
-main = defaultMain [tests]
+main = defaultMain tests
