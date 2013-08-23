@@ -23,10 +23,10 @@ import Feldspar.Core.Types (IntN(..), WordN(..))
 
 import Debug.Trace
 
-data SA a = SA { buf         :: Ptr a
-               , elems       :: Int32
-               , esize       :: Int32
-               , bytes       :: Word32
+data SA a = SA { buf   :: Ptr a
+               , elems :: Int32
+               , esize :: Int32
+               , bytes :: Word32
                }
   deriving (Eq, Show)
 

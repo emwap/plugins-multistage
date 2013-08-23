@@ -17,7 +17,6 @@ import Foreign.Marshal (alloca,pokeArray)
 import Foreign.Marshal.Unsafe (unsafeLocalState)
 import Foreign.Storable (Storable(..))
 import Foreign.C.String (CString, withCString)
-import Foreign.C.Types
 
 import Control.Monad ((>=>), when, unless)
 
@@ -105,7 +104,7 @@ compileAndLoad name opts = do
     when exists $ removeFile oname
     compileC cname oname opts
     initLinker
-    loadRawObject oname
+    _ <- loadRawObject oname
     resolveObjs $ error $ "Symbols in " ++ oname ++ " could not be resolved"
 
 compileC :: String -> String -> [String] -> IO ()

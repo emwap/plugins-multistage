@@ -29,11 +29,17 @@ prog2 v = let pv = toPush v in pv PV.++ pv
 
 loadFun 'prog2
 
+prop_prog0 :: Property
 prop_prog0 = eval prog0 === c_prog0
+
+prop_prog1 :: Property
 prop_prog1 = eval prog1 === c_prog1
+
+prop_prog2 :: NonEmptyList WordN -> Property
 prop_prog2 (NonEmpty xs) = eval prog2 xs === c_prog2 xs
 
-
+tests :: TestTree
 tests = $(testGroupGenerator)
 
+main :: IO ()
 main = defaultMain tests
