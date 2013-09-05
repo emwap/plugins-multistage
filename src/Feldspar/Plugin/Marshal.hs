@@ -155,7 +155,9 @@ instance Marshal Word32      where type Rep Word32      = Word32
 instance Marshal Word64      where type Rep Word64      = Word64
 instance Marshal WordN       where type Rep WordN       = WordN
 instance Marshal Float       where type Rep Float       = Float
+instance Marshal Double      where type Rep Double      = Double
 instance Marshal (Complex a) where type Rep (Complex a) = Complex a
+
 
 instance (Storable (Rep a), Marshal a) => Marshal [a]
   where
