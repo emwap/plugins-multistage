@@ -86,6 +86,7 @@ instance Reference Word32      where type Ref Word32      = Word32
 instance Reference Word64      where type Ref Word64      = Word64
 instance Reference WordN       where type Ref WordN       = WordN
 instance Reference Float       where type Ref Float       = Float
+instance Reference Double      where type Ref Double      = Double
 instance Reference (Complex a) where type Ref (Complex a) = Complex a
 
 instance (Storable a) => Reference (SA a)
@@ -155,6 +156,7 @@ instance Marshal Word32      where type Rep Word32      = Word32
 instance Marshal Word64      where type Rep Word64      = Word64
 instance Marshal WordN       where type Rep WordN       = WordN
 instance Marshal Float       where type Rep Float       = Float
+instance Marshal Double      where type Rep Double      = Double
 instance Marshal (Complex a) where type Rep (Complex a) = Complex a
 
 instance (Storable (Rep a), Marshal a) => Marshal [a]
