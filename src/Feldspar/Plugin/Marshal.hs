@@ -159,6 +159,7 @@ instance Marshal Float       where type Rep Float       = Float
 instance Marshal Double      where type Rep Double      = Double
 instance Marshal (Complex a) where type Rep (Complex a) = Complex a
 
+
 instance (Storable (Rep a), Marshal a) => Marshal [a]
   where
     type Rep [a] = SA (Rep a)
