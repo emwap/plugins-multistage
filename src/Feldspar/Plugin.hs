@@ -121,7 +121,7 @@ compileC srcfile objfile opts = do
 
 lookupSymbol :: String -> IO (Ptr a)
 lookupSymbol symbol = do
-    when (0 /= _plugin_hook) $ error "lookupSymbol: Runtime library missing"
+    when (0 /= feldspar_compiler_hook) $ error "lookupSymbol: Runtime library missing"
     mptr <- withCString symbol _lookupSymbol
     when (mptr == nullPtr) $ error $ "Symbol " ++ symbol ++ " not found"
     return mptr
@@ -129,5 +129,3 @@ lookupSymbol symbol = do
 foreign import ccall safe "lookupSymbol"
     _lookupSymbol :: CString -> IO (Ptr a)
 
-foreign import ccall safe "feldspar_plugin_hook"
-    _plugin_hook :: Int
