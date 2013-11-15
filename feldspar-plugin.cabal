@@ -39,7 +39,7 @@ library
                , th-expand-syns    >= 0.3
                , storable-record               < 0.1
                , storable-tuple                < 0.1
-               , syntactic         >= 1.6   && < 1.8
+               , syntactic         >= 1.6   && < 1.9
                , feldspar-language >= 0.6.1
                , feldspar-compiler >= 0.6.1
 
