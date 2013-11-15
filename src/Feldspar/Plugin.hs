@@ -28,6 +28,7 @@ import System.Info (os)
 
 
 -- Feldspar specific
+import Feldspar.Runtime
 import Feldspar.Compiler
 import Feldspar.Compiler.Backend.C.Library (encodeFunctionName)
 
