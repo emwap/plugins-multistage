@@ -61,9 +61,9 @@ test-suite regression
     feldspar-compiler,
     feldspar-plugin,
     base,
-    tasty            >= 0.3 && < 0.4,
+    tasty            >= 0.3 && < 0.5,
     tasty-th         >= 0.1 && < 0.2,
-    tasty-quickcheck >= 0.3 && < 0.4,
+    tasty-quickcheck >= 0.3 && < 0.5,
     QuickCheck       >= 2.5 && < 3.0
 
 benchmark needforspeed
