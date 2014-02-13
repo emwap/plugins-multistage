@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -55,12 +56,19 @@ expandFam name = go
     go (AppT (AppT ArrowT t) r) = [t| $(go t) -> $(go r) |]
     go (AppT t1@(ConT n) t2) | n == name = do
         decs <- reifyInstances name [t2]
-        case decs of
-          [TySynInstD _ (TySynEqn [AppT p1 (VarT pv1)] pt2)]
-              | AppT p2 et <- t2, p1 == p2        -> go $ substInType (pv1,et) pt2
-          [TySynInstD _ (TySynEqn [pattern] value)]
-              | pattern == value                  -> return value
-          _                                       -> appT (return t1) (go t2)
+        case map projInst decs of
+          [Just (_, [AppT p1 (VarT pv1)], pt2)]
+              | AppT p2 et <- t2, p1 == p2 -> go $ substInType (pv1,et) pt2
+          [Just (_, [pattern], value)]
+              | pattern == value           -> return value
+          _                                -> appT (return t1) (go t2)
     go (AppT t1 t2)   = appT (go t1) (go t2)
     go t              = return t
+
+#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
+    projInst (TySynInstD name (TySynEqn patterns typ)) = Just (name,patterns,typ)
+#else
+    projInst (TySynInstD name patterns typ)            = Just (name,patterns,typ)
+#endif
+    projInst _ = Nothing
 
