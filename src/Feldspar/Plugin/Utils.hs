@@ -56,9 +56,9 @@ expandFam name = go
     go (AppT t1@(ConT n) t2) | n == name = do
         decs <- reifyInstances name [t2]
         case decs of
-          [TySynInstD _ [AppT p1 (VarT pv1)] pt2]
+          [TySynInstD _ (TySynEqn [AppT p1 (VarT pv1)] pt2)]
               | AppT p2 et <- t2, p1 == p2        -> go $ substInType (pv1,et) pt2
-          [TySynInstD _ [pattern] value]
+          [TySynInstD _ (TySynEqn [pattern] value)]
               | pattern == value                  -> return value
           _                                       -> appT (return t1) (go t2)
     go (AppT t1 t2)   = appT (go t1) (go t2)
