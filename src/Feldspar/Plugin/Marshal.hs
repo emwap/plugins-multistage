@@ -26,47 +26,6 @@ import qualified Foreign.Storable.Record as Store
 
 import Feldspar.Core.Types (IntN(..), WordN(..))
 
-import Debug.Trace
-
-data SA a = SA { buf   :: Ptr a
-               , elems :: Int32
-               , esize :: Int32
-               , bytes :: Word32
-               }
-  deriving (Eq, Show)
-
-storeSA :: Storable a => Store.Dictionary (SA a)
-storeSA = Store.run $ SA
-    <$> Store.element buf
-    <*> Store.element elems
-    <*> Store.element esize
-    <*> Store.element bytes
-
-instance Storable a => Storable (SA a)
-  where
-    sizeOf    = Store.sizeOf    storeSA
-    alignment = Store.alignment storeSA
-    peek      = Store.peek      storeSA
-    poke      = Store.poke      storeSA
-
-deriving instance Storable IntN
-deriving instance Storable WordN
-
-storeComplex :: (RealFloat a, Storable a)
-             => Store.Dictionary (Complex a)
-storeComplex = Store.run $ (:+)
-    <$> Store.element realPart
-    <*> Store.element imagPart
-
-instance (RealFloat a, Storable a) => Storable (Complex a)
-  where
-    sizeOf    = Store.sizeOf    storeComplex
-    alignment = Store.alignment storeComplex
-    peek      = Store.peek      storeComplex
-    poke      = Store.poke      storeComplex
-
-
-
 -- | Optionally make a refrence of a value
 class Reference a
   where
@@ -247,4 +206,38 @@ instance ( Marshal a
     to (a,b,c,d,e,f,g) = (to a, to b, to c, to d, to e, to f, to g)
     from (a,b,c,d,e,f,g) =
       (,,,,,,) <$> from a <*> from b <*> from c <*> from d <*> from e <*> from f <*> from g
+
+data SA a = SA { buf   :: Ptr a
+               , elems :: Int32
+               , esize :: Int32
+               , bytes :: Word32
+               }
+  deriving (Eq, Show)
+
+storeSA :: Storable a => Store.Dictionary (SA a)
+storeSA = Store.run $ SA
+    <$> Store.element buf
+    <*> Store.element elems
+    <*> Store.element esize
+    <*> Store.element bytes
+
+instance Storable a => Storable (SA a)
+  where
+    sizeOf    = Store.sizeOf    storeSA
+    alignment = Store.alignment storeSA
+    peek      = Store.peek      storeSA
+    poke      = Store.poke      storeSA
+
+storeComplex :: (RealFloat a, Storable a)
+             => Store.Dictionary (Complex a)
+storeComplex = Store.run $ (:+)
+    <$> Store.element realPart
+    <*> Store.element imagPart
+
+instance (RealFloat a, Storable a) => Storable (Complex a)
+  where
+    sizeOf    = Store.sizeOf    storeComplex
+    alignment = Store.alignment storeComplex
+    peek      = Store.peek      storeComplex
+    poke      = Store.poke      storeComplex
 

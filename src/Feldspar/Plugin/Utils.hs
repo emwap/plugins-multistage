@@ -88,9 +88,9 @@ expandFam name = go
     go t              = return t
 
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
-    projInst (TySynInstD name (TySynEqn patterns typ)) = Just (name,patterns,typ)
+    projInst (TySynInstD inst (TySynEqn patterns typ)) = Just (inst,patterns,typ)
 #else
-    projInst (TySynInstD name patterns typ)            = Just (name,patterns,typ)
+    projInst (TySynInstD inst patterns typ)            = Just (inst,patterns,typ)
 #endif
     projInst _ = Nothing
 

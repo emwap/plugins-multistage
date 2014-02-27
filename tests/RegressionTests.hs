@@ -5,8 +5,6 @@ module Main where
 import Test.Tasty
 import Test.Tasty.TH
 import Test.Tasty.QuickCheck
-import Test.QuickCheck
-import Test.QuickCheck.Modifiers
 
 import Feldspar
 import Feldspar.Vector

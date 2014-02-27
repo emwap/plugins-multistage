@@ -78,7 +78,7 @@ declareWorker conf@Config{..} wname name as typ =
     , sigD bname [t| Ptr $(csig) |]
     , funD bname [clause [] (builder conf name) []]
     , sigD wname hsig
-    , funD wname [clause (map varP as) (worker bname factory as csig) []]
+    , funD wname [clause (map varP as) (worker bname factory as) []]
     ]
   where
     base    = nameBase name
@@ -87,8 +87,8 @@ declareWorker conf@Config{..} wname name as typ =
     hsig    = buildHaskellType typ
     csig    = buildCType typ
 
-worker :: Name -> Name -> [Name] -> Q Type -> Q Body
-worker bname factory as csig = normalB
+worker :: Name -> Name -> [Name] -> Q Body
+worker bname factory as = normalB
     [|do
         let fun = $(varE factory) $ castPtrToFunPtr $(varE bname)
         calloca $ \outPtr -> do
