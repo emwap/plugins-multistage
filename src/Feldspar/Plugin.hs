@@ -44,6 +44,8 @@ defaultConfig = Config { declWorker   = declareWorker
 loadFun :: Name -> Q [Dec]
 loadFun = loadFunWithConfig defaultConfig
 
+loadFunOpts :: [String] -> Name -> Q [Dec]
+loadFunOpts o = loadFunWithConfig defaultConfig{opts = o}
 
 declareImport :: Name -> TypeQ -> DecQ
 declareImport name csig =
