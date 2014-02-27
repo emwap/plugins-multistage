@@ -3,6 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+-- | Type rewriting
 module Feldspar.Plugin.Utils
   ( rewriteType
   , buildHaskellType
@@ -21,6 +22,7 @@ import Feldspar.Plugin.Marshal (Reference(..), Marshal(..))
 
 import Control.Monad ((<=<))
 
+-- | Normalize the type (expand type synonyms and type families)
 rewriteType :: Type -> Q Type
 rewriteType =   return
             <=< rewriteSyntactic
@@ -37,12 +39,32 @@ rewriteSyntactic = expandFam ''Internal <=< go
     go (AppT t1 t2) = [t| $(go t1) $(go t2) |]
     go t = return t
 
+-- | Construct the corresponding Haskell type of a foreign Feldspar
+-- function
+--
+-- > prog1 :: Data Index -> Vector1 Index
+-- >
+-- > sigD (mkName "h_prog1") $ loadFunType 'prog1 >>= rewriteType >>= buildHaskellType
+--
+-- becomes
+--
+-- > h_prog1 :: Index -> IO [Index]
+--
 buildHaskellType :: Type -> Q Type
 buildHaskellType = go
   where
     go (AppT (AppT ArrowT t) r) = [t| $(return t) -> $(go r) |]
     go r                        = [t| IO $(return r) |]
 
+-- | Construct the corresponding C type of a compiled Feldspar function
+--
+-- > sigD (mkName "c_prog1_fun") $ loadFunType 'prog1 >>= rewriteType
+--                                                    >>= buildCType
+--
+-- becomes
+--
+-- > c_prog1_fun :: Word32 -> Ptr (SA Word32) -> IO ()
+--
 buildCType :: Type -> Q Type
 buildCType = expandFam ''Ref <=< expandFam ''Rep <=< go
   where

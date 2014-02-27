@@ -3,7 +3,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module Feldspar.Plugin where
+-- | Dynamically load a compiled Feldspar function as a Haskell function
+module Feldspar.Plugin
+  ( loadFun
+  , loadFunOpts
+  , loadFunWithConfig
+  , defaultConfig
+  )
+  where
 
 import Feldspar.Plugin.Generic
 import Feldspar.Plugin.Utils
@@ -32,6 +39,7 @@ import Feldspar.Runtime
 import Feldspar.Compiler
 import Feldspar.Compiler.Backend.C.Library (encodeFunctionName)
 
+-- | Default configuration for the loader
 defaultConfig :: Config
 defaultConfig = Config { declWorker   = declareWorker
                        , typeFromName = loadFunType >=> rewriteType
@@ -41,9 +49,22 @@ defaultConfig = Config { declWorker   = declareWorker
                                         ]
                        }
 
+-- | Compile and load a Feldspar function into the current GHC session.
+--
+-- > prog1 :: Data Index -> Vector1 Index
+-- > prog1 c = indexed c (const c)
+-- >
+-- > $(loadFun 'prog1)
+--
+-- The call to @loadFun@ below will splice code into the current module
+-- to compile, load and wrap a Feldspar function as a Haskell function:
+--
+-- > c_prog1 :: Index -> [Index]
+--
 loadFun :: Name -> Q [Dec]
 loadFun = loadFunWithConfig defaultConfig
 
+-- | Call @loadFun@ with C compiler options
 loadFunOpts :: [String] -> Name -> Q [Dec]
 loadFunOpts o = loadFunWithConfig defaultConfig{opts = o}
 

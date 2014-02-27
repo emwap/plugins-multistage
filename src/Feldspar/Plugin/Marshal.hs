@@ -6,7 +6,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Feldspar.Plugin.Marshal where
+-- | Marshalling of data to and from a loaded Feldspar function
+module Feldspar.Plugin.Marshal
+  ( Marshal(..)
+  , Reference(..)
+  )
+  where
 
 import Foreign.Ptr (Ptr)
 import Foreign.Marshal (new, newArray, peekArray)
@@ -62,14 +67,19 @@ instance (RealFloat a, Storable a) => Storable (Complex a)
 
 
 
+-- | Optionally make a refrence of a value
 class Reference a
   where
+    -- | The type of a referenced value
     type Ref a :: *
 
+    -- | Convert to a referenced value
     ref         ::                a -> Ref a
     default ref :: (a ~ Ref a) => a -> Ref a
     ref = id
 
+    -- | Convert from a referenced value
+    -- In the IO monad to allow @peek@ing through the reference.
     deref :: Ref a -> IO a
     default deref :: (a ~ Ref a) => Ref a -> IO a
     deref = return
@@ -132,6 +142,7 @@ instance Storable (a, b, c, d, e, f, g) => Reference (a,b,c,d,e,f,g)
     deref = peek
 
 
+-- | Convert between Haskell and representation types
 class Marshal a
   where
     type Rep a :: *

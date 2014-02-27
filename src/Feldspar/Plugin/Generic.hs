@@ -2,6 +2,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+-- | Generic functions for function loading
 module Feldspar.Plugin.Generic
   ( loadFunWithConfig
   , loadFunType
@@ -14,6 +15,7 @@ import Language.Haskell.TH.Syntax (sequenceQ)
 
 import Foreign.Marshal.Unsafe (unsafeLocalState)
 
+-- | Configuration parameters for the function loader
 data Config = Config { declWorker   :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
                      , typeFromName :: Name -> Q Type
                      , prefix       :: String
@@ -21,6 +23,7 @@ data Config = Config { declWorker   :: Config -> Name -> Name -> [Name] -> Type 
                      , opts         :: [String]
                      }
 
+-- | Generic function compiler and loader
 loadFunWithConfig :: Config -> Name -> Q [Dec]
 loadFunWithConfig conf@Config{..} name = do
     typ <- typeFromName name
@@ -35,6 +38,7 @@ loadFunWithConfig conf@Config{..} name = do
     arity (AppT (AppT ArrowT _) r) = 1 + arity r
     arity _                        = 0
 
+-- | Extract the type of the supplied function name
 loadFunType :: Name -> Q Type
 loadFunType name = do
   info <- reify name
