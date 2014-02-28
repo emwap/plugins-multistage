@@ -2,7 +2,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
--- | Generic functions for function loading
 module Feldspar.Plugin.Generic
   ( loadFunWithConfig
   , loadFunType
@@ -11,8 +10,6 @@ module Feldspar.Plugin.Generic
 where
 
 import Language.Haskell.TH
-import Language.Haskell.TH.Syntax (sequenceQ)
-
 import Foreign.Marshal.Unsafe (unsafeLocalState)
 
 -- | Configuration parameters for the function loader
@@ -31,8 +28,8 @@ loadFunWithConfig conf@Config{..} name = do
     let cname   = mkName $ prefix ++ base
     let wname   = mkName $ prefix ++ base ++ "_worker"
     let args    = [mkName $ 'v' : show i | i <- [1..(arity typ)]]
-    sequenceQ $  declWorker conf wname name args typ
-              ++ declareWrapper cname wname args typ
+    sequence $  declWorker conf wname name args typ
+             ++ declareWrapper cname wname args typ
   where
     arity :: Type -> Int
     arity (AppT (AppT ArrowT _) r) = 1 + arity r
@@ -44,7 +41,7 @@ loadFunType name = do
   info <- reify name
   case info of
     (VarI _ t _ _) -> return t
-    _              -> error ("loadFun: " ++ show (nameBase name) ++ " is not a function")
+    _              -> error ("loadFun: " ++ show (nameBase name) ++ " is not a function: " ++ show info)
 
 declareWrapper :: Name -> Name -> [Name] -> Type -> [DecQ]
 declareWrapper cname wname as typ =
@@ -54,6 +51,6 @@ declareWrapper cname wname as typ =
 
 wrapper :: Name -> [Name] -> Q Body
 wrapper workername args = normalB
-    [|unsafeLocalState $ $(appsE $ map varE $ workername : args) |]
+    [|unsafeLocalState $(appsE $ map varE $ workername : args) |]
 
 

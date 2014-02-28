@@ -25,7 +25,9 @@ import Foreign.Marshal.Unsafe (unsafeLocalState)
 import Foreign.Storable (Storable(..))
 import Foreign.C.String (CString, withCString)
 
-import Control.Monad ((>=>), when, unless)
+import Control.Monad (join, (>=>), when, unless)
+import Control.Applicative
+import Control.Exception (evaluate)
 
 import Language.Haskell.TH
 
@@ -90,13 +92,18 @@ declareWorker conf@Config{..} wname name as typ =
 worker :: Name -> Name -> [Name] -> Q Body
 worker bname factory as = normalB
     [|do
-        let fun = $(varE factory) $ castPtrToFunPtr $(varE bname)
+        fun <- evaluate $ $(varE factory) $ castPtrToFunPtr $(varE bname)
         calloca $ \outPtr -> do
-          $(appE (appsE ([|fun|] : map toRef as)) [|outPtr|])
-          from =<< deref =<< peek outPtr
+          join $(infixApp (apply ([|pure fun|] : map toRef as)) [|(<*>)|] [|pure outPtr|])
+          unpack =<< peek outPtr
     |]
   where
-    toRef name = [| ref $ to $(varE name) |]
+    toRef name = [| pack $(varE name) |]
+
+    apply :: [ExpQ] -> ExpQ
+    apply [] = error "apply []"
+    apply [x] = x
+    apply (x:y:zs) = apply (infixApp x [|(<*>)|] y : zs)
 
 calloca :: forall a b. Storable a => (Ptr a -> IO b) -> IO b
 calloca f = do

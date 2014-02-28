@@ -77,7 +77,7 @@ expandFam name = go
   where
     go (AppT (AppT ArrowT t) r) = [t| $(go t) -> $(go r) |]
     go (AppT t1@(ConT n) t2) | n == name = do
-        decs <- reifyInstances name [t2]
+        decs <- reifyInstances n [t2]
         case map projInst decs of
           [Just (_, [AppT p1 (VarT pv1)], pt2)]
               | AppT p2 et <- t2, p1 == p2 -> go $ substInType (pv1,et) pt2
