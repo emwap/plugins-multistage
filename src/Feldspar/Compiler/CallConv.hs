@@ -32,8 +32,8 @@ rewriteSyntactic typ = expandSyns typ >>= go
     go t@(AppT c@(ConT _) x) = do
       inst <- isInstance ''Syntactic [t]
       if inst
-        then appT [t|Internal|] (return t)
-        else appT (return c) (go x)
+        then [t| Internal $(return t) |]
+        else [t| $(return c) $(go x)  |]
     go (AppT t1 t2) = appT (go t1) (go t2)
     go t = return t
 
