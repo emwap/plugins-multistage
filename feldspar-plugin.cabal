@@ -7,7 +7,7 @@ description:    Feldspar (http://feldspar.github.com) is an embedded DSL
                 This package contains a framework that enables loading compiled Feldspar
                 programs back into GHC
 category:       Language
-copyright:      Copyright (c) 2012, Anders Persson
+copyright:      Copyright (c) 2012-2014, Anders Persson
 author:         Anders Persson <anders.cj.persson@gmail.com>
 maintainer:     Anders Persson <anders.cj.persson@gmail.com>
 license:        BSD3
