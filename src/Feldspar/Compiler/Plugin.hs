@@ -4,30 +4,30 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 -- | Dynamically load a compiled Feldspar function as a Haskell function
-module Feldspar.Plugin
+module Feldspar.Compiler.Plugin
   ( loadFun
   , loadFunOpts
   , loadFunWithConfig
   , defaultConfig
+  , module Foreign.Marshal.Class
   )
   where
 
-import Feldspar.Plugin.Generic
-import Feldspar.Plugin.Utils
-import Feldspar.Plugin.Marshal
+import System.Plugins (initLinker, loadRawObject, resolveObjs)
 
-import System.Plugins
+import Feldspar.Plugin.Generic
+import Feldspar.Compiler.CallConv (rewriteType, buildCType, buildHaskellType)
 
 import Data.Word (Word8)
 import Foreign.Ptr
 import Foreign.Marshal (alloca,pokeArray)
+import Foreign.Marshal.Class
 import Foreign.Marshal.Unsafe (unsafeLocalState)
 import Foreign.Storable (Storable(..))
 import Foreign.C.String (CString, withCString)
 
 import Control.Monad (join, (>=>), when, unless)
 import Control.Applicative
-import Control.Exception (evaluate)
 
 import Language.Haskell.TH
 
@@ -38,18 +38,19 @@ import System.Info (os)
 
 -- Feldspar specific
 import Feldspar.Runtime
-import Feldspar.Compiler
+import Feldspar.Compiler (compile, defaultOptions)
 import Feldspar.Compiler.Backend.C.Library (encodeFunctionName)
+import Foreign.Marshal.Feldspar ()
 
 -- | Default configuration for the loader
-defaultConfig :: Config
-defaultConfig = Config { declWorker   = declareWorker
-                       , typeFromName = loadFunType >=> rewriteType
-                       , prefix       = "c_"
-                       , wdir         = "tmp"
-                       , opts         = [ -- "-optc -DLOG"
-                                        ]
-                       }
+feldsparPluginConfig :: Config
+feldsparPluginConfig =
+    defaultConfig { builder      = feldsparBuilder
+                  , worker       = feldsparWorker
+                  , typeFromName = loadFunType >=> rewriteType
+                  , mkHSig       = buildHaskellType
+                  , mkCSig       = buildCType
+                  }
 
 -- | Compile and load a Feldspar function into the current GHC session.
 --
@@ -58,44 +59,23 @@ defaultConfig = Config { declWorker   = declareWorker
 -- >
 -- > $(loadFun 'prog1)
 --
--- The call to @loadFun@ below will splice code into the current module
+-- The call to @loadFun@ above will splice code into the current module
 -- to compile, load and wrap a Feldspar function as a Haskell function:
 --
 -- > c_prog1 :: Index -> [Index]
 --
 loadFun :: Name -> Q [Dec]
-loadFun = loadFunWithConfig defaultConfig
+loadFun = loadFunWithConfig feldsparPluginConfig
 
 -- | Call @loadFun@ with C compiler options
 loadFunOpts :: [String] -> Name -> Q [Dec]
-loadFunOpts o = loadFunWithConfig defaultConfig{opts = o}
+loadFunOpts o = loadFunWithConfig feldsparPluginConfig{opts = o}
 
-declareImport :: Name -> TypeQ -> DecQ
-declareImport name csig =
-    forImpD cCall safe "dynamic" name [t|FunPtr $(csig) -> $(csig)|]
-
-declareWorker :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
-declareWorker conf@Config{..} wname name as typ =
-    [ declareImport factory csig
-    , sigD bname [t| Ptr $(csig) |]
-    , funD bname [clause [] (builder conf name) []]
-    , sigD wname hsig
-    , funD wname [clause (map varP as) (worker bname factory as) []]
-    ]
-  where
-    base    = nameBase name
-    bname   = mkName $ prefix ++ base ++ "_builder"
-    factory = mkName $ prefix ++ base ++ "_factory"
-    hsig    = buildHaskellType typ
-    csig    = buildCType typ
-
-worker :: Name -> Name -> [Name] -> Q Body
-worker bname factory as = normalB
-    [|do
-        fun <- evaluate $ $(varE factory) $ castPtrToFunPtr $(varE bname)
-        calloca $ \outPtr -> do
-          join $(infixApp (apply ([|pure fun|] : map toRef as)) [|(<*>)|] [|pure outPtr|])
-          unpack =<< peek outPtr
+feldsparWorker :: Name -> [Name] -> Q Body
+feldsparWorker fun as = normalB
+    [|calloca $ \outPtr -> do
+        join $(infixApp (apply ([|pure $(varE fun)|] : map toRef as)) [|(<*>)|] [|pure outPtr|])
+        unpack =<< peek outPtr
     |]
   where
     toRef name = [| pack $(varE name) |]
@@ -106,13 +86,12 @@ worker bname factory as = normalB
     apply (x:y:zs) = apply (infixApp x [|(<*>)|] y : zs)
 
 calloca :: forall a b. Storable a => (Ptr a -> IO b) -> IO b
-calloca f = do
-    alloca $ \ptr -> do
-      pokeArray (castPtr ptr) $ replicate (sizeOf ptr) (0::Word8)
-      f ptr
+calloca f = alloca $ \ptr -> do
+              pokeArray (castPtr ptr) $ replicate (sizeOf ptr) (0::Word8)
+              f ptr
 
-builder :: Config -> Name -> Q Body
-builder Config{..} fun = normalB
+feldsparBuilder :: Config -> Name -> Q Body
+feldsparBuilder Config{..} fun = normalB
     [|unsafeLocalState $ do
         createDirectoryIfMissing True wdir
         $(varE 'compile) $(varE fun) basename base defaultOptions

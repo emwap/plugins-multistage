@@ -8,30 +8,31 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | Marshalling of data to and from a loaded Feldspar function
-module Feldspar.Plugin.Marshal
-  ( Marshal(..)
+module Foreign.Marshal.Class
+  ( pack, unpack
+  , Marshal(..)
   , Reference(..)
-  , pack
-  , unpack
   )
   where
 
 import Foreign.Ptr (Ptr)
-import Foreign.Marshal (new, newArray, peekArray)
+import Foreign.Marshal (new)
 import Foreign.Storable (Storable(..))
 import Data.Int
 import Data.Word
-import Data.Complex
 import Control.Applicative
-import qualified Foreign.Storable.Record as Store
-
-import Feldspar.Core.Types (IntN(..), WordN(..))
 
 -- | Pack a value into its runtime representation
+--
+-- > pack a = to a >>= ref
+--
 pack :: (Reference (Rep a), Marshal a) => a -> IO (Ref (Rep a))
 pack a = to a >>= ref
 
 -- | Unpack a value from its runtime representation
+--
+-- > unpack a = deref a >>= from
+--
 unpack :: (Reference (Rep a), Marshal a) => Ref (Rep a) -> IO a
 unpack a = deref a >>= from
 
@@ -59,21 +60,12 @@ instance Reference Int8        where type Ref Int8        = Int8
 instance Reference Int16       where type Ref Int16       = Int16
 instance Reference Int32       where type Ref Int32       = Int32
 instance Reference Int64       where type Ref Int64       = Int64
-instance Reference IntN        where type Ref IntN        = IntN
 instance Reference Word8       where type Ref Word8       = Word8
 instance Reference Word16      where type Ref Word16      = Word16
 instance Reference Word32      where type Ref Word32      = Word32
 instance Reference Word64      where type Ref Word64      = Word64
-instance Reference WordN       where type Ref WordN       = WordN
 instance Reference Float       where type Ref Float       = Float
 instance Reference Double      where type Ref Double      = Double
-instance Reference (Complex a) where type Ref (Complex a) = Complex a
-
-instance (Storable a) => Reference (SA a)
-  where
-    type Ref (SA a) = Ptr (SA a)
-    ref   = new
-    deref = peek
 
 instance (Storable (a,b)) => Reference (a,b)
   where
@@ -132,28 +124,13 @@ instance Marshal Int8        where type Rep Int8        = Int8
 instance Marshal Int16       where type Rep Int16       = Int16
 instance Marshal Int32       where type Rep Int32       = Int32
 instance Marshal Int64       where type Rep Int64       = Int64
-instance Marshal IntN        where type Rep IntN        = IntN
 instance Marshal Word8       where type Rep Word8       = Word8
 instance Marshal Word16      where type Rep Word16      = Word16
 instance Marshal Word32      where type Rep Word32      = Word32
 instance Marshal Word64      where type Rep Word64      = Word64
-instance Marshal WordN       where type Rep WordN       = WordN
 instance Marshal Float       where type Rep Float       = Float
 instance Marshal Double      where type Rep Double      = Double
-instance Marshal (Complex a) where type Rep (Complex a) = Complex a
 
-
-instance (Storable (Rep a), Marshal a) => Marshal [a]
-  where
-    type Rep [a] = SA (Rep a)
-    to xs = do
-        let len  = fromIntegral $ length xs
-        let size = fromIntegral $ sizeOf (undefined :: Rep a)
-        ys <- sequence $ map to xs
-        buffer <- newArray ys
-        return $ SA buffer len size (fromIntegral (len * size))
-    from SA{..} = do
-        mapM from =<< peekArray (fromIntegral elems) buf
 
 instance (Marshal a, Marshal b) => Marshal (a,b)
   where
@@ -223,38 +200,4 @@ instance ( Marshal a
       (,,,,,,) <$> to a <*> to b <*> to c <*> to d <*> to e <*> to f <*> to g
     from (a,b,c,d,e,f,g) =
       (,,,,,,) <$> from a <*> from b <*> from c <*> from d <*> from e <*> from f <*> from g
-
-data SA a = SA { buf   :: Ptr a
-               , elems :: Int32
-               , esize :: Int32
-               , bytes :: Word32
-               }
-  deriving (Eq, Show)
-
-storeSA :: Storable a => Store.Dictionary (SA a)
-storeSA = Store.run $ SA
-    <$> Store.element buf
-    <*> Store.element elems
-    <*> Store.element esize
-    <*> Store.element bytes
-
-instance Storable a => Storable (SA a)
-  where
-    sizeOf    = Store.sizeOf    storeSA
-    alignment = Store.alignment storeSA
-    peek      = Store.peek      storeSA
-    poke      = Store.poke      storeSA
-
-storeComplex :: (RealFloat a, Storable a)
-             => Store.Dictionary (Complex a)
-storeComplex = Store.run $ (:+)
-    <$> Store.element realPart
-    <*> Store.element imagPart
-
-instance (RealFloat a, Storable a) => Storable (Complex a)
-  where
-    sizeOf    = Store.sizeOf    storeComplex
-    alignment = Store.alignment storeComplex
-    peek      = Store.peek      storeComplex
-    poke      = Store.poke      storeComplex
 

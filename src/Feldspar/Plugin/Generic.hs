@@ -2,23 +2,53 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+-- | Generic components
 module Feldspar.Plugin.Generic
-  ( loadFunWithConfig
+  (
+  -- * Loading
+    loadFunWithConfig
   , loadFunType
+
+  -- * Configuration
   , Config(..)
+  , defaultConfig
   )
 where
 
 import Language.Haskell.TH
+
+import Foreign.Ptr
 import Foreign.Marshal.Unsafe (unsafeLocalState)
 
 -- | Configuration parameters for the function loader
 data Config = Config { declWorker   :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
+                     , builder      :: Config -> Name -> Q Body
+                     , worker       :: Name -> [Name] -> Q Body
                      , typeFromName :: Name -> Q Type
+                     , mkHSig       :: Type -> Q Type
+                     , mkCSig       :: Type -> Q Type
                      , prefix       :: String
                      , wdir         :: String
                      , opts         :: [String]
                      }
+
+defaultConfig :: Config
+defaultConfig = Config { declWorker   = declareWorker
+                       , builder      = noBuilder
+                       , worker       = noWorker
+                       , typeFromName = loadFunType
+                       , mkHSig       = return
+                       , mkCSig       = return
+                       , prefix       = "c_"
+                       , wdir         = "tmp"
+                       , opts         = []
+                       }
+
+noBuilder :: Config -> Name -> Q Body
+noBuilder _ _ = normalB [| return nullPtr |]
+
+noWorker :: Name -> [Name] -> Q Body
+noWorker fun as = normalB $ appsE $ map varE $ fun:as
 
 -- | Generic function compiler and loader
 loadFunWithConfig :: Config -> Name -> Q [Dec]
@@ -41,7 +71,26 @@ loadFunType name = do
   info <- reify name
   case info of
     (VarI _ t _ _) -> return t
-    _              -> error ("loadFun: " ++ show (nameBase name) ++ " is not a function: " ++ show info)
+    _ -> error $ unwords ["loadFun:",show (nameBase name)
+                         ,"is not a function:",show info]
+
+declareWorker :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
+declareWorker conf@Config{..} wname name as typ =
+    [ declareImport factory csig
+    , sigD bname $ appT [t|Ptr|] csig
+    , funD bname [clause [] (builder conf name) []]
+    , sigD rname csig
+    , funD rname [clause [] (normalB [|$(varE factory) $ castPtrToFunPtr $(varE bname)|]) []]
+    , sigD wname hsig
+    , funD wname [clause (map varP as) (worker rname as) []]
+    ]
+  where
+    base    = nameBase name
+    bname   = mkName $ prefix ++ base ++ "_builder"
+    factory = mkName $ prefix ++ base ++ "_factory"
+    rname   = mkName $ prefix ++ base ++ "_raw"
+    hsig    = mkHSig typ
+    csig    = mkCSig typ
 
 declareWrapper :: Name -> Name -> [Name] -> Type -> [DecQ]
 declareWrapper cname wname as typ =
@@ -49,8 +98,11 @@ declareWrapper cname wname as typ =
     , funD cname [clause (map varP as) (wrapper wname as) [] ]
     ]
 
+declareImport :: Name -> TypeQ -> DecQ
+declareImport name csig =
+    forImpD cCall safe "dynamic" name [t|FunPtr $(csig) -> $(csig)|]
+
 wrapper :: Name -> [Name] -> Q Body
 wrapper workername args = normalB
     [|unsafeLocalState $(appsE $ map varE $ workername : args) |]
-
 

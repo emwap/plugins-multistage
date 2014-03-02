@@ -9,7 +9,7 @@ import Test.Tasty.QuickCheck
 import Feldspar
 import Feldspar.Vector
 import Feldspar.Vector.Push as PV
-import Feldspar.Plugin
+import Feldspar.Compiler.Plugin
 
 
 prog0 :: Data Index -> Data Index -> Data Index
