@@ -1,10 +1,8 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE RecordWildCards #-}
 
 -- | Type Rewriting machinery
-module Feldspar.Plugin.TypeRewrite
-  ( buildType
-  , CallConv(..)
+module Language.Haskell.TH.TypeRewrite
+  ( applyTF
   , expandTF
   )
   where
@@ -12,23 +10,21 @@ module Feldspar.Plugin.TypeRewrite
 import Data.Maybe (mapMaybe)
 
 import Language.Haskell.TH
-import Language.Haskell.TH.ExpandSyns (substInType)
+import Language.Haskell.TH.ExpandSyns (expandSyns,substInType)
 
--- | The Calling Convention specifies how a type should be converted
-data CallConv = CallConv { arg :: Type -> Q Type
-                           -- ^ Convert an argument
-                         , res :: Type -> Q Type
-                           -- ^ Convert the result
-                         }
-
--- | Convert a type using the supplied calling convention
-buildType :: CallConv -> Type -> Q Type
-buildType CallConv{..} typ = go typ >>= expandTF
+-- | Apply a type family
+-- Walk the type and apply the type family to every element that is an
+-- instance of @tf@
+applyTF :: Name -> Type -> Q Type
+applyTF tf typ = expandSyns typ >>= go
   where
-    go (AppT (AppT ArrowT t) r) = arg t `arrT` go r
-    go r                        = res r
-
-    arrT t = appT (appT arrowT t)
+    go t@(AppT c@(ConT _) x) = do
+      inst <- isInstance tf [t]
+      if inst
+        then appT (conT tf)  (return t)
+        else appT (return c) (go x)
+    go (AppT t1 t2) = appT (go t1) (go t2)
+    go t = return t
 
 -- | Expand type families
 expandTF :: Type -> Q Type
@@ -50,7 +46,9 @@ expandTF = down
                 , p1 == p2 -> down $ substInType (pv1,et) pt2
             [(p1,value)]
                 | p1 == value -> up value
-            _ -> return t
+            _ -> do
+              reportWarning $ unwords ["uncaught",show fam,show is]
+              return t
         _ -> return t
     up (AppT t1 t2) = appT (return t1) (return t2)
     up t = return t

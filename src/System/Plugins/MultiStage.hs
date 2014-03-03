@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 -- | Generic components
-module Feldspar.Plugin.Generic
+module System.Plugins.MultiStage 
   (
   -- * Loading
     loadFunWithConfig
@@ -12,10 +12,15 @@ module Feldspar.Plugin.Generic
   -- * Configuration
   , Config(..)
   , defaultConfig
+
+  -- * Calling Convention
+  , CallConv(..)
+  , buildType
   )
 where
 
 import Language.Haskell.TH
+import Language.Haskell.TH.TypeRewrite
 
 import Foreign.Ptr
 import Foreign.Marshal.Unsafe (unsafeLocalState)
@@ -106,3 +111,19 @@ wrapper :: Name -> [Name] -> Q Body
 wrapper workername args = normalB
     [|unsafeLocalState $(appsE $ map varE $ workername : args) |]
 
+
+-- | The Calling Convention specifies how a type should be converted
+data CallConv = CallConv { arg :: Type -> Q Type
+                           -- ^ Convert an argument
+                         , res :: Type -> Q Type
+                           -- ^ Convert the result
+                         }
+
+-- | Convert a type using the supplied calling convention
+buildType :: CallConv -> Type -> Q Type
+buildType CallConv{..} typ = go typ >>= expandTF
+  where
+    go (AppT (AppT ArrowT t) r) = arg t `arrT` go r
+    go r                        = res r
+
+    arrT t = appT (appT arrowT t)

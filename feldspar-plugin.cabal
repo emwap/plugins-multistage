@@ -28,11 +28,11 @@ library
     -- Feldspar-specific modules
     Feldspar.Compiler.Plugin
     Feldspar.Compiler.CallConv
-    Foreign.Marshal.Feldspar
+    Feldspar.Compiler.Marshal
 
     -- Generic modules
-    Feldspar.Plugin.Generic
-    Feldspar.Plugin.TypeRewrite
+    System.Plugins.MultiStage
+    Language.Haskell.TH.TypeRewrite
     Foreign.Marshal.Class
 
   build-depends: base              >= 4     && < 4.8

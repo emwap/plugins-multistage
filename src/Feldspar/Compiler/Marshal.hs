@@ -4,7 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Foreign.Marshal.Feldspar
+module Feldspar.Compiler.Marshal
   ( SA(..)
   )
   where

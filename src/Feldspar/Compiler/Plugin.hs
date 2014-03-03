@@ -14,8 +14,8 @@ module Feldspar.Compiler.Plugin
   where
 
 import System.Plugins (initLinker, loadRawObject, resolveObjs)
+import System.Plugins.MultiStage
 
-import Feldspar.Plugin.Generic
 import Feldspar.Compiler.CallConv (rewriteType, buildCType, buildHaskellType)
 
 import Data.Word (Word8)
@@ -40,7 +40,7 @@ import System.Info (os)
 import Feldspar.Runtime
 import Feldspar.Compiler (compile, defaultOptions)
 import Feldspar.Compiler.Backend.C.Library (encodeFunctionName)
-import Foreign.Marshal.Feldspar ()
+import Feldspar.Compiler.Marshal ()
 
 -- | Default configuration for the loader
 feldsparPluginConfig :: Config
