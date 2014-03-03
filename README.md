@@ -1,6 +1,5 @@
-feldspar-plugin
-===============
+# plugins-multistage
 
-[![Build Status](https://secure.travis-ci.org/emwap/feldspar-plugin.png)](http://travis-ci.org/emwap/feldspar-plugin)
+[![Build Status](https://secure.travis-ci.org/emwap/plugins-multistage.png)](http://travis-ci.org/emwap/plugins-multistage)
 
-Dynamic compilation and loading of Feldspar expressions
+Dynamic compilation and loading of functions from DSLs with staged compilation

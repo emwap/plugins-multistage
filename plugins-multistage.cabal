@@ -1,12 +1,10 @@
-name:           feldspar-plugin
-version:        0.2
-synopsis:       Dynamicaly load a compiled Feldspar program as a Haskell function
-description:    Feldspar (http://feldspar.github.com) is an embedded DSL
-                for describing digital signal processing algorithms.
+name:           plugins-multistage
+version:        0.3
+synopsis:       Dynamic linking for embedded DSLs with staged compilation
+description:    Dynamic compilation, linking and loading of functions in
+                staged languages.
 
-                This package contains a framework that enables loading compiled Feldspar
-                programs back into GHC
-category:       Language
+category:       System
 copyright:      Copyright (c) 2012-2014, Anders Persson
 author:         Anders Persson <anders.cj.persson@gmail.com>
 maintainer:     Anders Persson <anders.cj.persson@gmail.com>
@@ -19,30 +17,20 @@ tested-with:    GHC==7.6
 
 source-repository head
     type: git
-    location: https://github.com/emwap/feldspar-plugin
+    location: https://github.com/emwap/plugins-multistage
 
 library
   default-language: Haskell2010
 
   exposed-modules:
-    -- Feldspar-specific modules
-    Feldspar.Compiler.Plugin
-    Feldspar.Compiler.CallConv
-    Feldspar.Compiler.Marshal
-
-    -- Generic modules
     System.Plugins.MultiStage
 
   build-depends: base              >= 4     && < 4.8
                , plugins           >= 1.5.3 && < 2
-               , process
-               , directory
                , template-haskell
                , th-expand-syns    >= 0.3
                , storable-record               < 0.1
                , storable-tuple                < 0.1
-               , feldspar-language >= 0.6.1
-               , feldspar-compiler >= 0.6.1
 
   hs-source-dirs: src
 
@@ -58,9 +46,7 @@ test-suite regression
   default-language: Haskell2010
 
   build-depends:
-    feldspar-language,
-    feldspar-compiler,
-    feldspar-plugin,
+    plugins-multistage,
     base,
     tasty            >= 0.3,
     tasty-th         >= 0.1,
@@ -79,9 +65,7 @@ benchmark needforspeed
   ghc-options: -O2
 
   build-depends:
-    feldspar-language,
-    feldspar-compiler,
-    feldspar-plugin,
+    plugins-multistage,
     base,
     deepseq,
     criterion
