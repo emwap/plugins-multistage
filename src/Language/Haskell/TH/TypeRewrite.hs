@@ -46,9 +46,7 @@ expandTF = down
                 , p1 == p2 -> down $ substInType (pv1,et) pt2
             [(p1,value)]
                 | p1 == value -> up value
-            _ -> do
-              reportWarning $ unwords ["uncaught",show fam,show is]
-              return t
+            _ -> return t
         _ -> return t
     up (AppT t1 t2) = appT (return t1) (return t2)
     up t = return t
