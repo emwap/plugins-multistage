@@ -9,7 +9,8 @@ module Feldspar.Compiler.Plugin
   , loadFunOpts
   , loadFunWithConfig
   , defaultConfig
-  , module Foreign.Marshal.Class
+  , pack   -- from MultiStage
+  , unpack -- from MultiStage
   )
   where
 
@@ -21,7 +22,6 @@ import Feldspar.Compiler.CallConv (rewriteType, buildCType, buildHaskellType)
 import Data.Word (Word8)
 import Foreign.Ptr
 import Foreign.Marshal (alloca,pokeArray)
-import Foreign.Marshal.Class
 import Foreign.Marshal.Unsafe (unsafeLocalState)
 import Foreign.Storable (Storable(..))
 import Foreign.C.String (CString, withCString)

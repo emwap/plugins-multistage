@@ -13,19 +13,16 @@ module Feldspar.Compiler.CallConv
 
 
 import Language.Haskell.TH
-import Language.Haskell.TH.ExpandSyns (expandSyns)
-import Language.Haskell.TH.TypeRewrite (applyTF,expandTF)
 
-import System.Plugins.MultiStage (buildType,CallConv(..))
+import System.Plugins.MultiStage
 
 import Foreign.Ptr (Ptr)
 
 import Feldspar (Syntactic(..))
-import Foreign.Marshal.Class (Reference(..), Marshal(..))
 
 -- | Normalize the type (expand type synonyms and type families)
 rewriteType :: Type -> Q Type
-rewriteType t = expandSyns t >>= applyTF ''Internal >>= expandTF
+rewriteType t = applyTF ''Internal t >>= expandTF
 
 haskellCC :: CallConv
 haskellCC = CallConv { arg  = return

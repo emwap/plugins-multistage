@@ -32,8 +32,6 @@ library
 
     -- Generic modules
     System.Plugins.MultiStage
-    Language.Haskell.TH.TypeRewrite
-    Foreign.Marshal.Class
 
   build-depends: base              >= 4     && < 4.8
                , plugins           >= 1.5.3 && < 2

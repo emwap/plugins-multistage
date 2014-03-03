@@ -9,7 +9,7 @@ module Feldspar.Compiler.Marshal
   )
   where
 
-import Foreign.Marshal.Class
+import System.Plugins.MultiStage
 import Feldspar.Core.Types (IntN(..), WordN(..))
 
 import Data.Int (Int32)
