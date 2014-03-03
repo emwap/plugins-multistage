@@ -13,7 +13,10 @@ before_install:
 
     # Try installing some of the build-deps with apt-get for speed
     # - ./tools/travis-cabal-apt-install $mode feldspar-language/ feldspar-compiler/ ./
-    - cabal install --enable-tests --enable-benchmarks feldspar-language/ feldspar-compiler/
+    - cabal install --enable-tests feldspar-language/ feldspar-compiler/
+
+install:
+  - cabal install --only-dependencies --enable-tests --enable-benchmarks
 
 script:
   - cabal test
