@@ -13,7 +13,7 @@ import Control.Exception (evaluate)
 import Criterion.Main
 
 testdata :: [Word8]
-testdata = Prelude.take (1024*1024) $ cycle [1,2,3,4]
+testdata = Prelude.take (16*1024) $ cycle [1,2,3,4]
 
 naive :: Vector1 Word8 -> Data Word16
 naive = crcNaive 0x8005 0
