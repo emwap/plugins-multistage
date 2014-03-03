@@ -75,7 +75,7 @@ feldsparWorker :: Name -> [Name] -> Q Body
 feldsparWorker fun as = normalB
     [|calloca $ \outPtr -> do
         join $(infixApp (apply ([|pure $(varE fun)|] : map toRef as)) [|(<*>)|] [|pure outPtr|])
-        unpack =<< peek outPtr
+        peek outPtr >>= unpack
     |]
   where
     toRef name = [| pack $(varE name) |]
