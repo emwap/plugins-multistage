@@ -149,18 +149,8 @@ buildType CallConv{..} typ = go typ >>= expandTF
     arrT t = appT (appT arrowT t)
 
 -- | Apply a type family
--- Walk the type and apply the type family to every element that is an
--- instance of @tf@
 applyTF :: Name -> Type -> Q Type
-applyTF tf typ = expandSyns typ >>= go
-  where
-    go t@(AppT c@(ConT _) x) = do
-      inst <- isInstance tf [t]
-      if inst
-        then appT (conT tf)  (return t)
-        else appT (return c) (go x)
-    go (AppT t1 t2) = appT (go t1) (go t2)
-    go t = return t
+applyTF tf typ = appT (conT tf) $ expandSyns typ
 
 -- | Expand type families
 expandTF :: Type -> Q Type
@@ -177,14 +167,11 @@ expandTF = down
         FamilyI{} -> do
           is <- reifyInstances fam [t1]
           case mapMaybe projInst is of
-            [(AppT p1 (VarT pv1),pt2)]
-                | AppT p2 et <- t1
-                , p1 == p2 -> down $ substInType (pv1,et) pt2
-            [(p1,value)]
-                | p1 == value -> up value
+            [(p1,pt2)]
+              | Just t2 <- substitute (matchP p1 t1) pt2
+              -> down t2
             _ -> return t
         _ -> return t
-    up (AppT t1 t2) = appT (return t1) (return t2)
     up t = return t
 
     projInst :: Dec -> Maybe (Type, Type)
@@ -194,6 +181,21 @@ expandTF = down
     projInst (TySynInstD _ [pattern] typ)            = Just (pattern,typ)
 #endif
     projInst _ = Nothing
+
+substitute :: [(Name,Type)] -> Type -> Maybe Type
+substitute ss = go
+  where
+    go :: Type -> Maybe Type
+    go (VarT v)   = lookup v ss
+    go (AppT a b) = AppT <$> go a <*> go b
+    go t          = pure t
+
+matchP :: Type -> Type -> [(Name,Type)]
+matchP = go
+  where
+    go (VarT p1) t1        = [(p1,t1)]
+    go (AppT p1 p2) (AppT t1 t2) = go p1 t1 ++ go p2 t2
+    go p t = []
 
 -- | Pack a value into its runtime representation
 --
