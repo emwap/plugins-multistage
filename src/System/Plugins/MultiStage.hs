@@ -55,6 +55,7 @@ data Config = Config { declWorker   :: Config -> Name -> Name -> [Name] -> Type 
                      , prefix       :: String
                      , wdir         :: String
                      , opts         :: [String]
+                     , safety       :: Safety
                      }
 
 defaultConfig :: Config
@@ -67,6 +68,7 @@ defaultConfig = Config { declWorker   = declareWorker
                        , prefix       = "c_"
                        , wdir         = "tmp"
                        , opts         = []
+                       , safety       = unsafe
                        }
 
 noBuilder :: Config -> Name -> Q Body
@@ -101,7 +103,7 @@ loadFunType name = do
 
 declareWorker :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
 declareWorker conf@Config{..} wname name as typ =
-    [ declareImport factory csig
+    [ declareImport conf factory csig
     , sigD bname $ appT [t|Ptr|] csig
     , funD bname [clause [] (builder conf name) []]
     , sigD rname csig
@@ -123,9 +125,9 @@ declareWrapper cname wname as typ =
     , funD cname [clause (map varP as) (wrapper wname as) [] ]
     ]
 
-declareImport :: Name -> TypeQ -> DecQ
-declareImport name csig =
-    forImpD cCall safe "dynamic" name [t|FunPtr $(csig) -> $(csig)|]
+declareImport :: Config -> Name -> TypeQ -> DecQ
+declareImport Config{..} name csig =
+    forImpD cCall safety "dynamic" name [t|FunPtr $(csig) -> $(csig)|]
 
 wrapper :: Name -> [Name] -> Q Body
 wrapper workername args = normalB
