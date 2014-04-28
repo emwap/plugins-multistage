@@ -78,16 +78,18 @@ noWorker :: Name -> [Name] -> Q Body
 noWorker fun as = normalB $ appsE $ map varE $ fun:as
 
 -- | Generic function compiler and loader
-loadFunWithConfig :: Config -> Name -> Q [Dec]
-loadFunWithConfig conf@Config{..} name = do
-    typ <- typeFromName name
-    let base    = nameBase name
-    let cname   = mkName $ prefix ++ base
-    let wname   = mkName $ prefix ++ base ++ "_worker"
-    let args    = [mkName $ 'v' : show i | i <- [1..(arity typ)]]
-    sequence $  declWorker conf wname name args typ
-             ++ declareWrapper cname wname args typ
+loadFunWithConfig :: Config -> [Name] -> Q [Dec]
+loadFunWithConfig conf@Config{..} names = fmap concat $ mapM go names
   where
+    go name = do
+      typ <- typeFromName name
+      let base    = nameBase name
+      let cname   = mkName $ prefix ++ base
+      let wname   = mkName $ prefix ++ base ++ "_worker"
+      let args    = [mkName $ 'v' : show i | i <- [1..(arity typ)]]
+      sequence $  declWorker conf wname name args typ
+               ++ declareWrapper cname wname args typ
+
     arity :: Type -> Int
     arity (AppT (AppT ArrowT _) r) = 1 + arity r
     arity _                        = 0
