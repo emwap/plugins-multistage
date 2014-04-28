@@ -26,11 +26,8 @@ library
     System.Plugins.MultiStage
 
   build-depends: base              >= 4     && < 4.8
-               , plugins           >= 1.5.3 && < 2
                , template-haskell
                , th-expand-syns    >= 0.3
-               , storable-record               < 0.1
-               , storable-tuple                < 0.1
 
   hs-source-dirs: src
 
