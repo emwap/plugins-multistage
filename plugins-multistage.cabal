@@ -1,5 +1,5 @@
 name:           plugins-multistage
-version:        0.5
+version:        0.5.1
 synopsis:       Dynamic linking for embedded DSLs with staged compilation
 description:    Dynamic compilation, linking and loading of functions in
                 staged languages.
