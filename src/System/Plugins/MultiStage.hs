@@ -168,7 +168,7 @@ expandTF = down
     up t@(AppT (ConT fam) t1) = do
       info <- reify fam
       case info of
-        FamilyI{} -> do
+        FamilyI (FamilyD TypeFam _ _ _) _ -> do
           is <- reifyInstances fam [t1]
           case mapMaybe projInst is of
             [(p1,pt2)]
