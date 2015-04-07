@@ -25,7 +25,7 @@ library
   exposed-modules:
     System.Plugins.MultiStage
 
-  build-depends: base              >= 4     && < 4.8
+  build-depends: base              >= 4     && < 4.9
                , template-haskell
                , th-expand-syns    >= 0.3
 
