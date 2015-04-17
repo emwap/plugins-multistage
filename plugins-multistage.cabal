@@ -1,5 +1,5 @@
 name:           plugins-multistage
-version:        0.5.2
+version:        0.5.3
 synopsis:       Dynamic linking for embedded DSLs with staged compilation
 description:    Dynamic compilation, linking and loading of functions in
                 staged languages.
@@ -27,7 +27,7 @@ library
 
   build-depends: base              >= 4     && < 4.9
                , template-haskell
-               , th-expand-syns    >= 0.3
+               , th-desugar
 
   hs-source-dirs: src
 

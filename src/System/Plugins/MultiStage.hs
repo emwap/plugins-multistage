@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -32,8 +31,10 @@ module System.Plugins.MultiStage
   )
 where
 
+import Debug.Trace
+
 import Language.Haskell.TH
-import Language.Haskell.TH.ExpandSyns
+import Language.Haskell.TH.Desugar
 
 import Data.Int
 import Data.Word
@@ -79,7 +80,7 @@ noWorker fun as = normalB $ appsE $ map varE $ fun:as
 
 -- | Generic function compiler and loader
 loadFunWithConfig :: Config -> [Name] -> Q [Dec]
-loadFunWithConfig conf@Config{..} names = fmap concat $ mapM go names
+loadFunWithConfig conf@Config{..} names = concat <$> mapM go names
   where
     go name = do
       typ <- typeFromName name
@@ -154,52 +155,11 @@ buildType CallConv{..} typ = go typ >>= expandTF
 
 -- | Apply a type family
 applyTF :: Name -> Type -> Q Type
-applyTF tf typ = appT (conT tf) $ expandSyns typ
+applyTF tf = expandTF . AppT (ConT tf)
 
 -- | Expand type families
 expandTF :: Type -> Q Type
-expandTF = down
-  where
-    down :: Type -> Q Type
-    down (AppT t1 t2) = appT (down t1) (down t2) >>= up
-    down t            = up t
-
-    up :: Type -> Q Type
-    up t@(AppT (ConT fam) t1) = do
-      info <- reify fam
-      case info of
-        FamilyI (FamilyD TypeFam _ _ _) _ -> do
-          is <- reifyInstances fam [t1]
-          case mapMaybe projInst is of
-            [(p1,pt2)]
-              | Just t2 <- substitute (matchP p1 t1) pt2
-              -> down t2
-            _ -> return t
-        _ -> return t
-    up t = return t
-
-    projInst :: Dec -> Maybe (Type, Type)
-#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
-    projInst (TySynInstD _ (TySynEqn [pattern] typ)) = Just (pattern,typ)
-#else
-    projInst (TySynInstD _ [pattern] typ)            = Just (pattern,typ)
-#endif
-    projInst _ = Nothing
-
-substitute :: [(Name,Type)] -> Type -> Maybe Type
-substitute ss = go
-  where
-    go :: Type -> Maybe Type
-    go (VarT v)   = lookup v ss
-    go (AppT a b) = AppT <$> go a <*> go b
-    go t          = pure t
-
-matchP :: Type -> Type -> [(Name,Type)]
-matchP = go
-  where
-    go (VarT p1) t1        = [(p1,t1)]
-    go (AppT p1 p2) (AppT t1 t2) = go p1 t1 ++ go p2 t2
-    go p t = []
+expandTF t = sweeten <$> (desugar t >>= expandType)
 
 -- | Pack a value into its runtime representation
 --
@@ -225,14 +185,14 @@ class Reference a
     ref         ::                a -> IO (Ref a)
     default ref :: (a ~ Ref a) => a -> IO (Ref a)
     {-# INLINE ref #-}
-    ref a = return a
+    ref = return
 
     -- | Convert from a referenced value
     -- In the IO monad to allow @peek@ing through the reference.
     deref         ::                Ref a -> IO a
     default deref :: (a ~ Ref a) => Ref a -> IO a
     {-# INLINE deref #-}
-    deref a = return a
+    deref = return
 
 instance Reference Bool        where type Ref Bool        = Bool
 instance Reference Int8        where type Ref Int8        = Int8
@@ -254,12 +214,12 @@ class Marshal a
     to         ::                a -> IO (Rep a)
     default to :: (a ~ Rep a) => a -> IO (Rep a)
     {-# INLINE to #-}
-    to a = return a
+    to = return
 
     from         ::                Rep a -> IO a
     default from :: (a ~ Rep a) => Rep a -> IO a
     {-# INLINE from #-}
-    from a = return a
+    from = return
 
 instance Marshal Bool        where type Rep Bool        = Bool
 instance Marshal Int8        where type Rep Int8        = Int8
