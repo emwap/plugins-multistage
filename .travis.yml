@@ -22,10 +22,12 @@ matrix:
 before_install:
   - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
   - export PATH=/opt/alex/3.1.4/bin:/opt/happy/1.19.5/bin:$PATH
+  - uname -a
 
 install:
  - cabal --version
  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
+ - ghc --info
  - travis_retry cabal update
  - cabal sandbox init
  - cabal install --only-dependencies --enable-tests --enable-benchmarks
