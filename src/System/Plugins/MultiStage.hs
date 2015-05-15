@@ -54,6 +54,7 @@ data Config = Config { declWorker   :: Config -> Name -> Name -> [Name] -> Type 
                      , mkHSig       :: Type -> Q Type
                      , mkCSig       :: Type -> Q Type
                      , prefix       :: String
+                     , suffix       :: String
                      , wdir         :: String
                      , opts         :: [String]
                      , safety       :: Safety
@@ -64,19 +65,26 @@ defaultConfig = Config { declWorker   = declareWorker
                        , builder      = noBuilder
                        , worker       = noWorker
                        , typeFromName = loadFunType
-                       , mkHSig       = return
-                       , mkCSig       = return
+                       , mkHSig       = buildType resultInIO
+                       , mkCSig       = buildType resultInIO
                        , prefix       = "c_"
+                       , suffix       = ""
                        , wdir         = "tmp"
                        , opts         = []
                        , safety       = unsafe
                        }
 
 noBuilder :: Config -> Name -> Q Body
-noBuilder _ _ = normalB [| return nullPtr |]
+noBuilder _ _ = normalB [| nullPtr |]
 
 noWorker :: Name -> [Name] -> Q Body
 noWorker fun as = normalB $ appsE $ map varE $ fun:as
+
+resultInIO :: CallConv
+resultInIO = CallConv{..}
+  where
+    arg = return
+    res t = [t| IO $(return t) |]
 
 -- | Generic function compiler and loader
 loadFunWithConfig :: Config -> [Name] -> Q [Dec]
@@ -84,9 +92,9 @@ loadFunWithConfig conf@Config{..} names = concat <$> mapM go names
   where
     go name = do
       typ <- typeFromName name
-      let base    = nameBase name
-      let cname   = mkName $ prefix ++ base
-      let wname   = mkName $ prefix ++ base ++ "_worker"
+      let base    = prefix ++ nameBase name ++ suffix
+      let cname   = mkName base
+      let wname   = mkName $ base ++ "_worker"
       let args    = [mkName $ 'v' : show i | i <- [1..(arity typ)]]
       sequence $  declWorker conf wname name args typ
                ++ declareWrapper cname wname args typ
@@ -115,10 +123,10 @@ declareWorker conf@Config{..} wname name as typ =
     , funD wname [clause (map varP as) (worker rname as) []]
     ]
   where
-    base    = nameBase name
-    bname   = mkName $ prefix ++ base ++ "_builder"
-    factory = mkName $ prefix ++ base ++ "_factory"
-    rname   = mkName $ prefix ++ base ++ "_raw"
+    base    = prefix ++ nameBase name ++ suffix
+    bname   = mkName $ base ++ "_builder"
+    factory = mkName $ base ++ "_factory"
+    rname   = mkName $ base ++ "_raw"
     hsig    = mkHSig typ
     csig    = mkCSig typ
 
