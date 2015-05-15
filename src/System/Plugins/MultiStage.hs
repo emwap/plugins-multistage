@@ -16,6 +16,7 @@ module System.Plugins.MultiStage
   -- * Configuration
   , Config(..)
   , defaultConfig
+  , defaultBuilder
 
   -- * Calling Convention
   , CallConv(..)
@@ -33,18 +34,27 @@ where
 
 import Debug.Trace
 
+import BasicTypes (failed)
+import ObjLink (initObjLinker,loadObj,resolveObjs)
+
 import Language.Haskell.TH
 import Language.Haskell.TH.Desugar
 
 import Data.Int
 import Data.Word
 import Data.Maybe (mapMaybe)
+import Control.Monad
 import Control.Applicative
 
 import Foreign.Ptr
-import Foreign.Marshal (new)
+import Foreign.C.String (CString,withCString)
+import Foreign.Marshal (new,with)
 import Foreign.Marshal.Unsafe (unsafeLocalState)
 import Foreign.Storable
+
+import System.Info (os)
+import System.Process (readProcessWithExitCode)
+import System.Directory (doesFileExist, removeFile, createDirectoryIfMissing)
 
 -- | Configuration parameters for the function loader
 data Config = Config { declWorker   :: Config -> Name -> Name -> [Name] -> Type -> [DecQ]
@@ -79,6 +89,23 @@ noBuilder _ _ = normalB [| nullPtr |]
 
 noWorker :: Name -> [Name] -> Q Body
 noWorker fun as = normalB $ appsE $ map varE $ fun:as
+
+-- | Build, load and link a C file
+defaultBuilder :: Config -> Name -> Q Body
+defaultBuilder Config{..} name =
+  normalB [|unsafeLocalState $ do
+              createDirectoryIfMissing True wdir
+              compileAndLoad srcname objname []
+              lookupSymbol symbol
+          |]
+  where
+    base     = nameBase name ++ suffix
+    srcname  = wdir ++ "/" ++ base ++ ".c"
+    objname  = wdir ++ "/" ++ base ++ ".o"
+    symbol   = ldprefix ++ base -- encodeFunctionName base
+    ldprefix = case os of
+                 "darwin" -> "_"
+                 _        -> ""
 
 resultInIO :: CallConv
 resultInIO = CallConv{..}
@@ -160,6 +187,36 @@ buildType CallConv{..} typ = go typ >>= expandTF
     go r                        = res r
 
     arrT t = appT (appT arrowT t)
+
+compileAndLoad :: FilePath -> FilePath -> [String] -> IO ()
+compileAndLoad cname oname opts = do
+    exists <- doesFileExist oname
+    when exists $ removeFile oname
+    compileC cname oname opts
+    initObjLinker
+    _ <- loadObj oname
+    res <- resolveObjs
+    when (failed res) $ error $ "Symbols in " ++ oname ++ " could not be resolved"
+
+compileC :: String -> String -> [String] -> IO ()
+compileC srcfile objfile opts = do
+    let args = [ "-optc -std=c99"
+               , "-optc -Wall"
+               , "-w"
+               , "-c"
+               ]
+    (_,stdout,stderr) <- readProcessWithExitCode "ghc" (args ++ opts ++ ["-o",objfile,srcfile]) ""
+    let output = stdout ++ stderr
+    unless (null output) $ putStrLn output
+
+lookupSymbol :: String -> IO (Ptr a)
+lookupSymbol symbol = do
+    mptr <- withCString symbol _lookupSymbol
+    when (mptr == nullPtr) $ error $ "Symbol " ++ symbol ++ " not found"
+    return mptr
+
+foreign import ccall safe "lookupSymbol"
+    _lookupSymbol :: CString -> IO (Ptr a)
 
 -- | Apply a type family
 applyTF :: Name -> Type -> Q Type

@@ -1,5 +1,5 @@
 name:           plugins-multistage
-version:        0.5.3
+version:        0.6
 synopsis:       Dynamic linking for embedded DSLs with staged compilation
 description:    Dynamic compilation, linking and loading of functions in
                 staged languages.
@@ -26,6 +26,9 @@ library
     System.Plugins.MultiStage
 
   build-depends: base              >= 4     && < 4.9
+               , ghc
+               , process
+               , directory
                , template-haskell
                , th-desugar
 
@@ -33,22 +36,23 @@ library
 
   ghc-options: -fcontext-stack=100
 
--- test-suite regression
---   type: exitcode-stdio-1.0
+test-suite regression
+  type: exitcode-stdio-1.0
 
---   hs-source-dirs: tests
+  hs-source-dirs: tests
 
---   main-is: RegressionTests.hs
+  main-is: RegressionTests.hs
 
---   default-language: Haskell2010
+  default-language: Haskell2010
 
---   build-depends:
---     plugins-multistage,
---     base,
---     tasty            >= 0.3,
---     tasty-th         >= 0.1,
---     tasty-quickcheck >= 0.3,
---     QuickCheck       >= 2.5 && < 3.0
+  build-depends:
+    plugins-multistage,
+    base,
+    template-haskell,
+    tasty            >= 0.3,
+    tasty-th         >= 0.1,
+    tasty-quickcheck >= 0.3,
+    QuickCheck       >= 2.5 && < 3.0
 
 -- benchmark needforspeed
 --   type: exitcode-stdio-1.0
