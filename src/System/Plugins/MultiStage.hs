@@ -144,10 +144,12 @@ declareWorker conf@Config{..} wname name as typ =
     [ declareImport conf factory csig
     , sigD bname $ appT [t|Ptr|] csig
     , funD bname [clause [] (builder conf name) []]
+    , pragInlD bname NoInline FunLike AllPhases
     , sigD rname csig
     , funD rname [clause [] (normalB [|$(varE factory) $ castPtrToFunPtr $(varE bname)|]) []]
     , sigD wname hsig
     , funD wname [clause (map varP as) (worker rname as) []]
+    , pragInlD wname NoInline FunLike AllPhases
     ]
   where
     base    = prefix ++ nameBase name ++ suffix
