@@ -81,7 +81,7 @@ script:
 deploy:
   provider: hackage
   password:
-    secure: BXzEh64CrE3o3Ncbn7QF4adn9hYhNeEmHGZuGZNBMzPYCGljpTccQBcSUww+fua3ZiELW6tJP+9jxPvFIMPLpa2v6VpMBzE1j7LbFLfWEs8gG8iRG4JwLvymgEWny5jFuxbRkLkxTVIc65DVibRRIyOrzAmUqnX9QtD3m8Yn3Xw=
+    secure: CTbVvVYPDYpGppf2LjgzI5CpiP7BCYEJI7gIulqx2th5GsZomH8YqwPMTBA0dJJYouEXrnnuZTG40B6hveV+mG6vgL31WDPdvv3pFV/7FLpUQpx0MYiKZP5c2XzZAJqHwQEAjD1x+VItoHm2V3GshU7MYPKFRch+a2216Rx53QU=
   username:
     secure: QdafLaM2CXoaYSj/m9UK4K7Yhyd4IrFLBvwURk4mT8fbrAKuXGX1fDH7s3Ud6WqKAzA8KIc61o8q5r5kX5faiYEyEgxYZ3wu4FjMoiU2uZmfPZ2v0UlcagK6yDtgjB8y3G5rG8cOkuIM+xVGvJkU//ZttJ4vVQNXofFn25ve3ME=
   on:
