@@ -38,6 +38,9 @@ import Debug.Trace
 import BasicTypes (failed)
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 800
 import GHCi.ObjLink (initObjLinker,loadObj,resolveObjs)
+#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 802
+import GHCi.ObjLink (ShouldRetainCAFs(..))
+#endif
 #else
 import ObjLink (initObjLinker,loadObj,resolveObjs)
 #endif
@@ -204,7 +207,11 @@ compileAndLoad cname oname opts = do
     exists <- doesFileExist oname
     when exists $ removeFile oname
     compileC cname oname opts
+#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 802
+    initObjLinker RetainCAFs
+#else
     initObjLinker
+#endif
     _ <- loadObj oname
     res <- resolveObjs
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 800
