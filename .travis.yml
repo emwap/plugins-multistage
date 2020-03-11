@@ -1,50 +1,83 @@
 sudo: false
 language: c
-
 cache:
   directories:
-    - .cabal-sandbox
-
+  - ".cabal-sandbox"
 matrix:
   include:
-    - env: CABALVER=1.18 GHCVER=7.8.4
-      addons: {apt: {sources: [hvr-ghc], packages: [cabal-install-1.18,ghc-7.8.4,happy-1.19.5,alex-3.1.7]}}
-    - env: CABALVER=1.22 GHCVER=7.10.1
-      addons: {apt: {sources: [hvr-ghc], packages: [cabal-install-1.22,ghc-7.10.1,happy-1.19.5,alex-3.1.7]}}
-    - env: CABALVER=1.24 GHCVER=8.0.2
-      addons: {apt: {sources: [hvr-ghc], packages: [cabal-install-1.24,ghc-8.0.2,happy-1.19.5,alex-3.1.7]}}
-    - env: CABALVER=2.2 GHCVER=8.4.4
-      addons: {apt: {sources: [hvr-ghc], packages: [cabal-install-2.2,ghc-8.4.4,happy-1.19.5,alex-3.1.7]}}
-    - env: CABALVER=head GHCVER=head
-      addons: {apt: {sources: [hvr-ghc], packages: [cabal-install-head,ghc-head,happy-1.19.5,alex-3.1.7]}}
-
+  - env: CABALVER=1.18 GHCVER=7.8.4
+    addons:
+      apt:
+        sources:
+        - hvr-ghc
+        packages:
+        - cabal-install-1.18
+        - ghc-7.8.4
+        - happy-1.19.5
+        - alex-3.1.7
+  - env: CABALVER=1.22 GHCVER=7.10.1
+    addons:
+      apt:
+        sources:
+        - hvr-ghc
+        packages:
+        - cabal-install-1.22
+        - ghc-7.10.1
+        - happy-1.19.5
+        - alex-3.1.7
+  - env: CABALVER=1.24 GHCVER=8.0.2
+    addons:
+      apt:
+        sources:
+        - hvr-ghc
+        packages:
+        - cabal-install-1.24
+        - ghc-8.0.2
+        - happy-1.19.5
+        - alex-3.1.7
+  - env: CABALVER=2.2 GHCVER=8.4.4
+    addons:
+      apt:
+        sources:
+        - hvr-ghc
+        packages:
+        - cabal-install-2.2
+        - ghc-8.4.4
+        - happy-1.19.5
+        - alex-3.1.7
+  - env: CABALVER=head GHCVER=head
+    addons:
+      apt:
+        sources:
+        - hvr-ghc
+        packages:
+        - cabal-install-head
+        - ghc-head
+        - happy-1.19.5
+        - alex-3.1.7
   allow_failures:
-    - env: CABALVER=head GHCVER=head
-
+  - env: CABALVER=head GHCVER=head
 before_install:
-  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
-  - export PATH=/opt/alex/3.1.7/bin:/opt/happy/1.19.5/bin:$PATH
-  - uname -a
-
+- export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
+- export PATH=/opt/alex/3.1.7/bin:/opt/happy/1.19.5/bin:$PATH
+- uname -a
 install:
- - cabal --version
- - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
- - ghc --info
- - travis_retry cabal update
- - cabal sandbox init
- - cabal install --only-dependencies --enable-tests --enable-benchmarks
-
-# Here starts the actual work to be performed for the package under test; any command which exits with a non-zero exit code causes the build to fail.
+- cabal --version
+- echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo
+  '?')]"
+- ghc --info
+- travis_retry cabal update
+- cabal sandbox init
+- cabal install --only-dependencies --enable-tests --enable-benchmarks
 script:
- - if [ -f configure.ac ]; then autoreconf -i; fi
- - cabal configure --enable-tests --enable-benchmarks -v2  # -v2 provides useful information for debugging
- - cabal build -j2  # this builds all libraries and executables (including tests/benchmarks)
- - cabal test
- - cabal check
- - cabal sdist   # tests that a source-distribution can be generated
-
-# Check that the resulting source distribution can be built & installed.
-# If there are no other `.tar.gz` files in `dist`, this can be even simpler:
-# `cabal install --force-reinstalls dist/*-*.tar.gz`
- - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
-   (cd dist && cabal sandbox init --sandbox=../.cabal-sandbox && cabal install -j2 --force-reinstalls "$SRC_TGZ")
+- if [ -f configure.ac ]; then autoreconf -i; fi
+- cabal configure --enable-tests --enable-benchmarks -v2
+- cabal build -j2
+- cabal test
+- cabal check
+- cabal sdist
+- SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz && (cd dist && cabal sandbox
+  init --sandbox=../.cabal-sandbox && cabal install -j2 --force-reinstalls "$SRC_TGZ")
+deploy:
+  password:
+    secure: BXzEh64CrE3o3Ncbn7QF4adn9hYhNeEmHGZuGZNBMzPYCGljpTccQBcSUww+fua3ZiELW6tJP+9jxPvFIMPLpa2v6VpMBzE1j7LbFLfWEs8gG8iRG4JwLvymgEWny5jFuxbRkLkxTVIc65DVibRRIyOrzAmUqnX9QtD3m8Yn3Xw=
