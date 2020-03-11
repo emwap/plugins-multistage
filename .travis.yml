@@ -85,4 +85,6 @@ deploy:
   username:
     secure: QdafLaM2CXoaYSj/m9UK4K7Yhyd4IrFLBvwURk4mT8fbrAKuXGX1fDH7s3Ud6WqKAzA8KIc61o8q5r5kX5faiYEyEgxYZ3wu4FjMoiU2uZmfPZ2v0UlcagK6yDtgjB8y3G5rG8cOkuIM+xVGvJkU//ZttJ4vVQNXofFn25ve3ME=
   on:
+    repo: emwap/plugins-multistage
+    branch: master
     Acondition: $GHCVER = 8.4.4 
