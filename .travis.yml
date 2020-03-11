@@ -79,5 +79,10 @@ script:
 - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz && (cd dist && cabal sandbox
   init --sandbox=../.cabal-sandbox && cabal install -j2 --force-reinstalls "$SRC_TGZ")
 deploy:
+  provider: hackage
   password:
     secure: BXzEh64CrE3o3Ncbn7QF4adn9hYhNeEmHGZuGZNBMzPYCGljpTccQBcSUww+fua3ZiELW6tJP+9jxPvFIMPLpa2v6VpMBzE1j7LbFLfWEs8gG8iRG4JwLvymgEWny5jFuxbRkLkxTVIc65DVibRRIyOrzAmUqnX9QtD3m8Yn3Xw=
+  username:
+    secure: QdafLaM2CXoaYSj/m9UK4K7Yhyd4IrFLBvwURk4mT8fbrAKuXGX1fDH7s3Ud6WqKAzA8KIc61o8q5r5kX5faiYEyEgxYZ3wu4FjMoiU2uZmfPZ2v0UlcagK6yDtgjB8y3G5rG8cOkuIM+xVGvJkU//ZttJ4vVQNXofFn25ve3ME=
+  on:
+    Acondition: $GHCVER = 8.4.4 
