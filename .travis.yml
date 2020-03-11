@@ -87,4 +87,3 @@ deploy:
   on:
     repo: emwap/plugins-multistage
     branch: master
-    Acondition: $GHCVER = 8.4.4 
